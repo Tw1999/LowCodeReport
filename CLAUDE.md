@@ -14,7 +14,7 @@
 
 【数据库表结构与业务含义】
 
-一、费用应收表：tb_charge_fee（当前应收与状态）
+一、费用应收表：tidb_sync_combine.tb_charge_fee（当前应收与状态）
 - 表名：tb_charge_fee
 - 主要用途：
   - 记录每一笔费用的应收信息（应收金额、欠费金额、已收金额、减免、退款、违约金等）；
@@ -56,7 +56,7 @@
   - 按时间：fee_date、fee_due_date、fee_start_date/fee_end_date
   - 按收款状态：is_charge、debts_amount > 0 等
 
-二、费用操作历史表：tb_charge_fee_his（费用历史快照）
+二、费用操作历史表：tidb_sync_combine.tb_charge_fee_his（费用历史快照）
 - 表名：tb_charge_fee_his
 - 主要用途：
   - 保存费用在不同操作时刻的历史记录，如收款、减免、退款等发生时的快照；
@@ -68,7 +68,7 @@
   - 做“某一日期时点”的费用盘点（历史视角）；
   - 分析费用的变更轨迹（应收 → 已收 → 减免/退款）。
 
-三、收款票据表：tb_charge_receipts（收款抬头）
+三、收款票据表：tidb_sync_combine.tb_charge_receipts（收款抬头）
 - 表名：tb_charge_receipts
 - 主要用途：
   - 记录每一次收款的票据信息，作为收款的抬头/主表；
@@ -94,7 +94,7 @@
   - receipts.id = receipts_detail.rece_id
   - receipts.pay_flow_id = receipts_detail.pay_flow_id（一般一对多）
 
-四、收费明细表：tb_charge_receipts_detail（业务明细）
+四、收费明细表：tidb_sync_combine.tb_charge_receipts_detail（业务明细）
 - 表名：tb_charge_receipts_detail
 - 主要用途：
   - 每一条记录一个费用明细的处理结果，是统计实收、预存、冲抵、减免、退款、违约金等最核心的交易明细表；
@@ -140,7 +140,7 @@
   - 按交易类型：deal_type IN ('实收', '实收红冲', '预存', '预存冲抵', '减免', '退款', ...) 
   - 按客户/资源/科目维度做统计：customer_id, resource_id, cost_id, corp_cost_id
 
-五、组织/项目表：pms_base.rf_organize（组织架构 + 项目信息）
+五、组织/项目表：erp_base.rf_organize（组织架构 + 项目信息）
 - 表名：pms_base.rf_organize（注意：此表在 pms_base 库中）
 - 主要用途：
   - 存储组织结构树：集团、区域、公司、项目、部门、岗位等；

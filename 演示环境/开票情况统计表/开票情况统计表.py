@@ -68,7 +68,7 @@ fee_agg AS (
             THEN f.due_amount
             ELSE 0
         END) AS year_due
-    FROM tb_charge_fee f
+    FROM tidb_sync_combine.tb_charge_fee f
     WHERE f.comm_id IN ({comm_placeholders})
       AND f.corp_cost_id IN ({cost_placeholders})
       {contract_condition_fee}
@@ -119,7 +119,7 @@ receipt_agg AS (
             THEN d.deal_amount
             ELSE 0
         END) AS year_payment
-    FROM tb_charge_receipts_detail d
+    FROM tidb_sync_combine.tb_charge_receipts_detail d
     WHERE d.comm_id IN ({comm_placeholders})
       AND d.corp_cost_id IN ({cost_placeholders})
       {contract_condition_detail}
@@ -131,7 +131,7 @@ month_unpaid AS (
         d.comm_id,
         d.corp_cost_id,
         SUM(d.deal_amount) AS amount
-    FROM tb_charge_receipts_detail d
+    FROM tidb_sync_combine.tb_charge_receipts_detail d
     WHERE d.comm_id IN ({comm_placeholders})
       AND d.corp_cost_id IN ({cost_placeholders})
       AND d.deal_date > %s
@@ -139,7 +139,7 @@ month_unpaid AS (
       AND d.deal_type = '托收'
       AND d.is_delete = 0
       AND NOT EXISTS (
-          SELECT 1 FROM tb_charge_receipts_detail d2
+          SELECT 1 FROM tidb_sync_combine.tb_charge_receipts_detail d2
           WHERE d2.fee_id = d.fee_id
             AND d2.deal_type = '托收确认'
             AND d2.is_delete = 0
@@ -152,7 +152,7 @@ year_unpaid AS (
         d.comm_id,
         d.corp_cost_id,
         SUM(d.deal_amount) AS amount
-    FROM tb_charge_receipts_detail d
+    FROM tidb_sync_combine.tb_charge_receipts_detail d
     WHERE d.comm_id IN ({comm_placeholders})
       AND d.corp_cost_id IN ({cost_placeholders})
       AND d.deal_date > %s
@@ -160,7 +160,7 @@ year_unpaid AS (
       AND d.deal_type = '托收'
       AND d.is_delete = 0
       AND NOT EXISTS (
-          SELECT 1 FROM tb_charge_receipts_detail d2
+          SELECT 1 FROM tidb_sync_combine.tb_charge_receipts_detail d2
           WHERE d2.fee_id = d.fee_id
             AND d2.deal_type = '托收确认'
             AND d2.is_delete = 0
@@ -173,14 +173,14 @@ prev_year_unpaid AS (
         d.comm_id,
         d.corp_cost_id,
         SUM(d.deal_amount) AS amount
-    FROM tb_charge_receipts_detail d
+    FROM tidb_sync_combine.tb_charge_receipts_detail d
     WHERE d.comm_id IN ({comm_placeholders})
       AND d.corp_cost_id IN ({cost_placeholders})
       AND d.deal_date < %s
       AND d.deal_type = '托收'
       AND d.is_delete = 0
       AND NOT EXISTS (
-          SELECT 1 FROM tb_charge_receipts_detail d2
+          SELECT 1 FROM tidb_sync_combine.tb_charge_receipts_detail d2
           WHERE d2.fee_id = d.fee_id
             AND d2.deal_type = '托收确认'
             AND d2.is_delete = 0
@@ -221,8 +221,15 @@ WHERE o.Id IN ({comm_placeholders})
 ORDER BY o.Name, c.sort, c.cost_name
 '''
 
-# 组装参数（按SQL中%s出现顺序）
+# 组装参数（按SQL中%s出现顺序 - SELECT中的%s先于WHERE中的%s）
 args = []
+
+# CTE fee_agg - SELECT中的CASE statements 日期参数 (在WHERE之前!)
+args.append(year_start)  # line 55: f.fee_date < %s
+args.append(year_start)  # line 61: f.fee_date >= %s
+args.append(end_date)    # line 61: f.fee_date <= %s
+args.append(year_start)  # line 67: f.fee_date >= %s
+args.append(year_end)    # line 67: f.fee_date <= %s
 
 # CTE fee_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
@@ -230,20 +237,7 @@ args.extend(corp_cost_ids)
 if contract_type:
     args.append(contract_type)
 
-# CTE fee_agg - CASE statements 中的日期参数
-args.append(year_start)  # line 55: f.fee_date < %s
-args.append(year_start)  # line 61: f.fee_date >= %s
-args.append(end_date)    # line 61: f.fee_date <= %s
-args.append(year_start)  # line 67: f.fee_date >= %s
-args.append(year_end)    # line 67: f.fee_date <= %s
-
-# CTE receipt_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
-args.extend(comm_ids)
-args.extend(corp_cost_ids)
-if contract_type:
-    args.append(contract_type)
-
-# CTE receipt_agg - CASE statements 中的日期参数
+# CTE receipt_agg - SELECT中的CASE statements 日期参数 (在WHERE之前!)
 args.append(year_start)  # line 84: d.deal_date < %s
 args.append(year_start)  # line 84: d.fee_date < %s
 args.append(month_start) # line 92: d.deal_date > %s
@@ -255,19 +249,25 @@ args.append(end_date)    # line 108: d.deal_date <= %s
 args.append(year_start)  # line 116: d.deal_date > %s
 args.append(end_date)    # line 116: d.deal_date <= %s
 
-# CTE month_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+# CTE receipt_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+args.extend(comm_ids)
+args.extend(corp_cost_ids)
+if contract_type:
+    args.append(contract_type)
+
+# CTE month_unpaid - WHERE中的日期参数 (在SELECT之后,不需要调整)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 args.append(month_start) # line 137: d.deal_date > %s
 args.append(end_date)    # line 138: d.deal_date <= %s
 
-# CTE year_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+# CTE year_unpaid - WHERE中的日期参数
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 args.append(year_start)  # line 158: d.deal_date > %s
 args.append(end_date)    # line 159: d.deal_date <= %s
 
-# CTE prev_year_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+# CTE prev_year_unpaid - WHERE中的日期参数
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 args.append(year_start)  # line 179: d.deal_date < %s
