@@ -7,6 +7,13 @@ import datetime
 # 解析入参
 comm_ids = params.get("comm_ids", [])  # 项目ID列表（多选必填）
 corp_cost_ids = params.get("corp_cost_ids", [])  # 公司科目ID列表（必选）
+
+# 确保是列表格式（支持元组输入）
+if not isinstance(comm_ids, list):
+    comm_ids = list(comm_ids) if comm_ids else []
+if not isinstance(corp_cost_ids, list):
+    corp_cost_ids = list(corp_cost_ids) if corp_cost_ids else []
+
 contract_type = params.get("contract_type")  # 合同类别（非必填）
 start_date = params.get("start_date")  # 统计开始时间A（格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS）
 end_date = params.get("end_date")  # 统计截止时间B（格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS）
