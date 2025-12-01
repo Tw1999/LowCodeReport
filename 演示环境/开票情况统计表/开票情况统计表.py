@@ -8,10 +8,25 @@ import datetime
 comm_ids = params.get("comm_ids", [])  # 项目ID列表（多选必填）
 corp_cost_ids = params.get("corp_cost_ids", [])  # 公司科目ID列表（必选）
 contract_type = params.get("contract_type")  # 合同类别（非必填）
-end_date = params.get("end_date")  # 统计截止时间B（格式：YYYY-MM-DD HH:MM:SS）
+start_date = params.get("start_date")  # 统计开始时间A（格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS）
+end_date = params.get("end_date")  # 统计截止时间B（格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS）
 
 # 计算关键时间点
-b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+# 支持多种日期格式：YYYY-MM-DD HH:MM:SS 或 YYYY-MM-DD 或 YYYY-M-D
+# 处理开始时间A
+if ' ' in start_date:  # 包含时间部分，格式为 YYYY-MM-DD HH:MM:SS
+    a_time = datetime.datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+else:  # 只有日期部分，格式为 YYYY-MM-DD 或 YYYY-M-D
+    a_time = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    start_date = a_time.strftime('%Y-%m-%d') + ' 00:00:00'  # 补全为当天开始时间
+
+# 处理结束时间B
+if ' ' in end_date:  # 包含时间部分，格式为 YYYY-MM-DD HH:MM:SS
+    b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+else:  # 只有日期部分，格式为 YYYY-MM-DD 或 YYYY-M-D
+    b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    end_date = b_time.strftime('%Y-%m-%d') + ' 23:59:59'  # 补全为当天结束时间
+
 year_start = f"{b_time.year}-01-01 00:00:00"  # B当年1月1日
 year_end = f"{b_time.year}-12-31 23:59:59"  # B当年12月31日
 month_start = f"{b_time.year}-{b_time.month:02d}-01 00:00:00"  # B当月1日
@@ -189,9 +204,9 @@ SELECT
     COALESCE(yu.amount, 0) AS year_invoice_unpaid,
     o.Id AS comm_id,
     c.id AS corp_cost_id
-FROM pms_base.rf_organize o
-LEFT JOIN pms_base.rf_organize p ON o.ParentId = p.Id
-CROSS JOIN tb_base_charge_cost c
+FROM erp_base.rf_organize o
+LEFT JOIN erp_base.rf_organize p ON o.ParentId = p.Id
+CROSS JOIN erp_base.tb_base_charge_cost c
 LEFT JOIN fee_agg f ON o.Id = f.comm_id AND c.id = f.corp_cost_id
 LEFT JOIN receipt_agg r ON o.Id = r.comm_id AND c.id = r.corp_cost_id
 LEFT JOIN month_unpaid mu ON o.Id = mu.comm_id AND c.id = mu.corp_cost_id
@@ -209,51 +224,55 @@ ORDER BY o.Name, c.sort, c.cost_name
 # 组装参数（按SQL中%s出现顺序）
 args = []
 
-# CTE fee_agg 参数（项目、科目在WHERE中）
+# CTE fee_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 if contract_type:
     args.append(contract_type)
-args.append(year_start)  # 年初往年欠费
-args.append(year_start)  # 年初至本月应收 start
-args.append(end_date)    # 年初至本月应收 end
-args.append(year_start)  # 本年应收 start
-args.append(year_end)    # 本年应收 end
 
-# CTE receipt_agg 参数（项目、科目）
+# CTE fee_agg - CASE statements 中的日期参数
+args.append(year_start)  # line 55: f.fee_date < %s
+args.append(year_start)  # line 61: f.fee_date >= %s
+args.append(end_date)    # line 61: f.fee_date <= %s
+args.append(year_start)  # line 67: f.fee_date >= %s
+args.append(year_end)    # line 67: f.fee_date <= %s
+
+# CTE receipt_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 if contract_type:
     args.append(contract_type)
-args.append(year_start)  # 年初往年欠费已收 deal_date
-args.append(year_start)  # 年初往年欠费已收 fee_date
-args.append(month_start) # 本月开票 start
-args.append(end_date)    # 本月开票 end
-args.append(year_start)  # 当年累计开票 start
-args.append(end_date)    # 当年累计开票 end
-args.append(month_start) # 本月回款 start
-args.append(end_date)    # 本月回款 end
-args.append(year_start)  # 本年累计回款 start
-args.append(end_date)    # 本年累计回款 end
 
-# CTE month_unpaid 参数（项目、科目）
+# CTE receipt_agg - CASE statements 中的日期参数
+args.append(year_start)  # line 84: d.deal_date < %s
+args.append(year_start)  # line 84: d.fee_date < %s
+args.append(month_start) # line 92: d.deal_date > %s
+args.append(end_date)    # line 92: d.deal_date <= %s
+args.append(year_start)  # line 100: d.deal_date > %s
+args.append(end_date)    # line 100: d.deal_date <= %s
+args.append(month_start) # line 108: d.deal_date > %s
+args.append(end_date)    # line 108: d.deal_date <= %s
+args.append(year_start)  # line 116: d.deal_date > %s
+args.append(end_date)    # line 116: d.deal_date <= %s
+
+# CTE month_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(month_start) # 本月开票未回款 start
-args.append(end_date)    # 本月开票未回款 end
+args.append(month_start) # line 137: d.deal_date > %s
+args.append(end_date)    # line 138: d.deal_date <= %s
 
-# CTE year_unpaid 参数（项目、科目）
+# CTE year_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(year_start)  # 本年开票未回款 start
-args.append(end_date)    # 本年开票未回款 end
+args.append(year_start)  # line 158: d.deal_date > %s
+args.append(end_date)    # line 159: d.deal_date <= %s
 
-# CTE prev_year_unpaid 参数（项目、科目）
+# CTE prev_year_unpaid - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(year_start)  # 往年开票未回款
+args.append(year_start)  # line 179: d.deal_date < %s
 
-# 主查询 WHERE 参数（项目、科目）
+# 主查询 WHERE - comm_id IN (...), corp_cost_id IN (...)
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 

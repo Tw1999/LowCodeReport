@@ -177,7 +177,7 @@
       - 按项目性质（CommKind）统计欠费率；
       - 按省/市/区域做区域维度分析。
 
-六、公司收费科目表：tb_base_charge_cost（公司级收费科目维度）
+六、公司收费科目表：erp_base.tb_base_charge_cost（公司级收费科目维度）
 - 表名：tb_base_charge_cost :contentReference[oaicite:0]{index=0}
 - 主要用途：
   - 用于统一维护公司层面的收费科目树（类似总账科目/产品目录），提供标准化的科目名称、业务类别、科目类别等；
