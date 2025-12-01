@@ -10,19 +10,15 @@ corp_cost_ids = params.get("corp_cost_ids", [])  # 公司科目ID列表（必选
 
 # 确保是列表格式（支持多种输入格式：列表、元组、逗号分隔的字符串）
 if isinstance(comm_ids, str):
-    # 如果是字符串,按逗号分隔
     comm_ids = [x.strip() for x in comm_ids.split(',') if x.strip()]
 elif not isinstance(comm_ids, (list, tuple)):
-    # 如果既不是字符串也不是列表/元组,尝试转换
     comm_ids = list(comm_ids) if comm_ids else []
 elif isinstance(comm_ids, tuple):
     comm_ids = list(comm_ids)
 
 if isinstance(corp_cost_ids, str):
-    # 如果是字符串,按逗号分隔
     corp_cost_ids = [x.strip() for x in corp_cost_ids.split(',') if x.strip()]
 elif not isinstance(corp_cost_ids, (list, tuple)):
-    # 如果既不是字符串也不是列表/元组,尝试转换
     corp_cost_ids = list(corp_cost_ids) if corp_cost_ids else []
 elif isinstance(corp_cost_ids, tuple):
     corp_cost_ids = list(corp_cost_ids)
@@ -37,19 +33,12 @@ end_date = params.get("end_date")  # 统计截止时间B（格式：YYYY-MM-DD �
 
 # 计算关键时间点
 # 支持多种日期格式：YYYY-MM-DD HH:MM:SS 或 YYYY-MM-DD 或 YYYY-M-D
-# 处理开始时间A
-if ' ' in start_date:  # 包含时间部分，格式为 YYYY-MM-DD HH:MM:SS
-    a_time = datetime.datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
-else:  # 只有日期部分，格式为 YYYY-MM-DD 或 YYYY-M-D
-    a_time = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    start_date = a_time.strftime('%Y-%m-%d') + ' 00:00:00'  # 补全为当天开始时间
-
 # 处理结束时间B
-if ' ' in end_date:  # 包含时间部分，格式为 YYYY-MM-DD HH:MM:SS
+if ' ' in end_date:
     b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
-else:  # 只有日期部分，格式为 YYYY-MM-DD 或 YYYY-M-D
+else:
     b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    end_date = b_time.strftime('%Y-%m-%d') + ' 23:59:59'  # 补全为当天结束时间
+    end_date = b_time.strftime('%Y-%m-%d') + ' 23:59:59'
 
 year_start = f"{b_time.year}-01-01 00:00:00"  # B当年1月1日
 year_end = f"{b_time.year}-12-31 23:59:59"  # B当年12月31日
@@ -69,24 +58,20 @@ if contract_type:
 # 构建SQL
 sql = f'''
 WITH
--- 应收数据汇总（按项目+科目）
 fee_agg AS (
     SELECT
         f.comm_id,
         f.corp_cost_id,
-        -- 年初往年欠费（应收部分）：费用时间 < 当年1月1日
         SUM(CASE
             WHEN f.fee_date < %s AND f.is_delete = 0
             THEN f.due_amount
             ELSE 0
         END) AS year_begin_due,
-        -- 年初至本月应收：费用时间 >= 当年1月1日 AND <= B
         SUM(CASE
             WHEN f.fee_date >= %s AND f.fee_date <= %s AND f.is_delete = 0
             THEN f.due_amount
             ELSE 0
         END) AS year_to_month_due,
-        -- 本年应收：费用时间 >= 当年1月1日 AND <= 当年12月31日
         SUM(CASE
             WHEN f.fee_date >= %s AND f.fee_date <= %s AND f.is_delete = 0
             THEN f.due_amount
@@ -98,12 +83,10 @@ fee_agg AS (
       {contract_condition_fee}
     GROUP BY f.comm_id, f.corp_cost_id
 ),
--- 收款明细数据汇总（按项目+科目）
 receipt_agg AS (
     SELECT
         d.comm_id,
         d.corp_cost_id,
-        -- 年初往年欠费（已收部分）：操作时间 < 当年1月1日 AND 费用时间 < 当年1月1日
         SUM(CASE
             WHEN d.deal_date < %s AND d.fee_date < %s
                  AND d.deal_type IN ('减免', '减免红冲', '预存冲抵', '预存冲抵红冲', '代扣', '托收确认', '实收', '实收红冲')
@@ -111,7 +94,6 @@ receipt_agg AS (
             THEN d.deal_amount
             ELSE 0
         END) AS year_begin_paid,
-        -- 本月开票：操作时间 > 当月1日 AND <= B
         SUM(CASE
             WHEN d.deal_date > %s AND d.deal_date <= %s
                  AND d.deal_type IN ('托收', '代扣', '实收', '实收红冲', '预存', '预存红冲')
@@ -119,7 +101,6 @@ receipt_agg AS (
             THEN d.deal_amount
             ELSE 0
         END) AS month_invoice,
-        -- 当年累计开票：操作时间 > 当年1月1日 AND <= B
         SUM(CASE
             WHEN d.deal_date > %s AND d.deal_date <= %s
                  AND d.deal_type IN ('托收', '代扣', '实收', '实收红冲', '预存', '预存红冲')
@@ -127,7 +108,6 @@ receipt_agg AS (
             THEN d.deal_amount
             ELSE 0
         END) AS year_invoice,
-        -- 本月回款：操作时间 > 当月1日 AND <= B
         SUM(CASE
             WHEN d.deal_date > %s AND d.deal_date <= %s
                  AND d.deal_type IN ('托收确认', '代扣', '实收', '实收红冲', '预存', '预存红冲')
@@ -135,7 +115,6 @@ receipt_agg AS (
             THEN d.deal_amount
             ELSE 0
         END) AS month_payment,
-        -- 本年累计回款：操作时间 > 当年1月1日 AND <= B
         SUM(CASE
             WHEN d.deal_date > %s AND d.deal_date <= %s
                  AND d.deal_type IN ('托收确认', '代扣', '实收', '实收红冲', '预存', '预存红冲')
@@ -149,7 +128,6 @@ receipt_agg AS (
       {contract_condition_detail}
     GROUP BY d.comm_id, d.corp_cost_id
 ),
--- 本月托收未确认
 month_unpaid AS (
     SELECT
         d.comm_id,
@@ -170,7 +148,6 @@ month_unpaid AS (
       )
     GROUP BY d.comm_id, d.corp_cost_id
 ),
--- 本年托收未确认
 year_unpaid AS (
     SELECT
         d.comm_id,
@@ -191,7 +168,6 @@ year_unpaid AS (
       )
     GROUP BY d.comm_id, d.corp_cost_id
 ),
--- 往年托收未确认
 prev_year_unpaid AS (
     SELECT
         d.comm_id,
@@ -211,23 +187,20 @@ prev_year_unpaid AS (
       )
     GROUP BY d.comm_id, d.corp_cost_id
 )
--- 主查询：关联项目、科目、汇总数据
 SELECT
-    COALESCE(p.Name, '') AS area_name,
-    o.Name AS project_name,
-    c.cost_name AS cost_name,
-    COALESCE(f.year_begin_due, 0) - COALESCE(r.year_begin_paid, 0) AS year_begin_debt,
-    COALESCE(f.year_to_month_due, 0) AS year_to_month_due,
-    COALESCE(f.year_due, 0) AS year_due,
-    COALESCE(pyu.amount, 0) AS prev_year_invoice_unpaid,
-    COALESCE(r.month_invoice, 0) AS month_invoice,
-    COALESCE(r.year_invoice, 0) AS year_invoice,
-    COALESCE(r.month_payment, 0) AS month_payment,
-    COALESCE(r.year_payment, 0) AS year_payment,
-    COALESCE(mu.amount, 0) AS month_invoice_unpaid,
-    COALESCE(yu.amount, 0) AS year_invoice_unpaid,
-    o.Id AS comm_id,
-    c.id AS corp_cost_id
+    COALESCE(p.Name, '') AS 区域名称,
+    o.Name AS 项目名称,
+    c.cost_name AS 科目名称,
+    COALESCE(f.year_begin_due, 0) - COALESCE(r.year_begin_paid, 0) AS 年初往年欠费,
+    COALESCE(f.year_to_month_due, 0) AS 年初至本月应收,
+    COALESCE(f.year_due, 0) AS 本年应收,
+    COALESCE(pyu.amount, 0) AS 往年开票未回款,
+    COALESCE(r.month_invoice, 0) AS 本月开票,
+    COALESCE(r.year_invoice, 0) AS 当年累计开票,
+    COALESCE(r.month_payment, 0) AS 本月回款,
+    COALESCE(r.year_payment, 0) AS 本年累计回款,
+    COALESCE(mu.amount, 0) AS 本月开票未回款,
+    COALESCE(yu.amount, 0) AS 本年开票未回款
 FROM erp_base.rf_organize o
 LEFT JOIN erp_base.rf_organize p ON o.ParentId = p.Id
 CROSS JOIN erp_base.tb_base_charge_cost c
@@ -245,80 +218,61 @@ WHERE o.Id IN ({comm_placeholders})
 ORDER BY o.Name, c.sort, c.cost_name
 '''
 
-# 组装参数（按SQL中%s出现顺序 - SELECT中的%s先于WHERE中的%s）
+# 组装参数（按SQL中%s出现顺序）
 args = []
 
-# CTE fee_agg - SELECT中的CASE statements 日期参数 (在WHERE之前!)
-args.append(year_start)  # line 55: f.fee_date < %s
-args.append(year_start)  # line 61: f.fee_date >= %s
-args.append(end_date)    # line 61: f.fee_date <= %s
-args.append(year_start)  # line 67: f.fee_date >= %s
-args.append(year_end)    # line 67: f.fee_date <= %s
+# CTE fee_agg - SELECT中的CASE statements
+args.append(year_start)  # year_begin_due: f.fee_date < %s
+args.append(year_start)  # year_to_month_due: f.fee_date >= %s
+args.append(end_date)    # year_to_month_due: f.fee_date <= %s
+args.append(year_start)  # year_due: f.fee_date >= %s
+args.append(year_end)    # year_due: f.fee_date <= %s
 
-# CTE fee_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+# CTE fee_agg - WHERE clause
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 if contract_type:
     args.append(contract_type)
 
-# CTE receipt_agg - SELECT中的CASE statements 日期参数 (在WHERE之前!)
-args.append(year_start)  # line 84: d.deal_date < %s
-args.append(year_start)  # line 84: d.fee_date < %s
-args.append(month_start) # line 92: d.deal_date > %s
-args.append(end_date)    # line 92: d.deal_date <= %s
-args.append(year_start)  # line 100: d.deal_date > %s
-args.append(end_date)    # line 100: d.deal_date <= %s
-args.append(month_start) # line 108: d.deal_date > %s
-args.append(end_date)    # line 108: d.deal_date <= %s
-args.append(year_start)  # line 116: d.deal_date > %s
-args.append(end_date)    # line 116: d.deal_date <= %s
+# CTE receipt_agg - SELECT中的CASE statements
+args.append(year_start)  # year_begin_paid: d.deal_date < %s
+args.append(year_start)  # year_begin_paid: d.fee_date < %s
+args.append(month_start) # month_invoice: d.deal_date > %s
+args.append(end_date)    # month_invoice: d.deal_date <= %s
+args.append(year_start)  # year_invoice: d.deal_date > %s
+args.append(end_date)    # year_invoice: d.deal_date <= %s
+args.append(month_start) # month_payment: d.deal_date > %s
+args.append(end_date)    # month_payment: d.deal_date <= %s
+args.append(year_start)  # year_payment: d.deal_date > %s
+args.append(end_date)    # year_payment: d.deal_date <= %s
 
-# CTE receipt_agg - WHERE clause: comm_id IN (...), corp_cost_id IN (...)
+# CTE receipt_agg - WHERE clause
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 if contract_type:
     args.append(contract_type)
 
-# CTE month_unpaid - WHERE中的日期参数 (在SELECT之后,不需要调整)
+# CTE month_unpaid
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(month_start) # line 137: d.deal_date > %s
-args.append(end_date)    # line 138: d.deal_date <= %s
+args.append(month_start) # d.deal_date > %s
+args.append(end_date)    # d.deal_date <= %s
 
-# CTE year_unpaid - WHERE中的日期参数
+# CTE year_unpaid
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(year_start)  # line 158: d.deal_date > %s
-args.append(end_date)    # line 159: d.deal_date <= %s
+args.append(year_start)  # d.deal_date > %s
+args.append(end_date)    # d.deal_date <= %s
 
-# CTE prev_year_unpaid - WHERE中的日期参数
+# CTE prev_year_unpaid
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
-args.append(year_start)  # line 179: d.deal_date < %s
+args.append(year_start)  # d.deal_date < %s
 
-# 主查询 WHERE - comm_id IN (...), corp_cost_id IN (...)
+# 主查询 WHERE
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 
-# 生成调试SQL(将参数替换到SQL中用于调试)
-debug_sql = sql
-for arg in args:
-    if arg is None:
-        debug_sql = debug_sql.replace('%s', 'NULL', 1)
-    elif isinstance(arg, (int, float)):
-        debug_sql = debug_sql.replace('%s', str(arg), 1)
-    else:
-        # 字符串直接加单引号,不需要转义(这只是用于显示调试,不是真正执行的SQL)
-        debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
-
-# 移除SQL注释,避免注释导致SQL无法执行
-import re
-# 移除单行注释 (-- 注释内容)
-debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
-
-# 返回调试SQL供查看
-set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回生成的SQL语句")
-
-# 注释掉实际执行,只返回SQL用于调试
+# 执行查询
 dataRows = db_query(sql, tuple(args))
 set_result(rows=dataRows, message="查询成功")

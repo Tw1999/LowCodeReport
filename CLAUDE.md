@@ -320,5 +320,105 @@
    - 返回字段满足报表需求（可以适当增加别名，便于前端理解）；
    - 无需 def run() 函数，直接输出顶层可执行代码。
 
+【常见问题与解决方案】
+
+1. 参数化查询中的参数顺序问题
+   - 问题：SQL中的%s占位符是按照文本从左到右顺序替换的，SELECT子句中的%s会先于WHERE子句中的%s被替换
+   - 解决方案：构建args参数列表时，必须严格按照SQL文本中%s出现的顺序添加参数
+   - 示例：
+     ```python
+     sql = '''
+     SELECT
+         SUM(CASE WHEN f.fee_date < %s THEN f.due_amount ELSE 0 END) AS amount
+     FROM tb_charge_fee f
+     WHERE f.comm_id IN (%s, %s)
+     '''
+     # 正确的参数顺序：先添加SELECT中的日期参数，再添加WHERE中的ID参数
+     args = []
+     args.append(year_start)  # SELECT中的%s
+     args.append(comm_id1)    # WHERE中的第1个%s
+     args.append(comm_id2)    # WHERE中的第2个%s
+     ```
+
+2. 多选参数的格式处理
+   - 问题：生产环境传入的参数可能带有引号（如"'id1','id2'"），导致SQL语法错误
+   - 解决方案：
+     ```python
+     # 支持多种输入格式（列表、元组、逗号分隔字符串）
+     if isinstance(comm_ids, str):
+         comm_ids = [x.strip() for x in comm_ids.split(',') if x.strip()]
+     elif isinstance(comm_ids, tuple):
+         comm_ids = list(comm_ids)
+
+     # 清理可能存在的引号
+     comm_ids = [str(x).strip().strip("'").strip('"') for x in comm_ids]
+
+     # 构建占位符
+     comm_placeholders = ','.join(['%s'] * len(comm_ids))
+     sql = f"WHERE comm_id IN ({comm_placeholders})"
+
+     # 添加参数（数据库驱动会自动处理引号）
+     args.extend(comm_ids)
+     ```
+
+3. 日期格式兼容性处理
+   - 问题：参数可能传入多种日期格式（'YYYY-MM-DD'、'YYYY-M-D'、'YYYY-MM-DD HH:MM:SS'）
+   - 解决方案：
+     ```python
+     import datetime
+
+     # 检查是否包含时间部分
+     if ' ' in end_date:
+         b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+     else:
+         # Python的strptime会自动处理单数字的月份和日期
+         b_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+         end_date = b_time.strftime('%Y-%m-%d') + ' 23:59:59'
+     ```
+
+4. 调试SQL生成（用于生产环境问题排查）
+   - 问题：需要查看实际执行的SQL语句来排查问题
+   - 解决方案：
+     ```python
+     import re
+
+     # 生成调试SQL
+     debug_sql = sql
+     for arg in args:
+         if arg is None:
+             debug_sql = debug_sql.replace('%s', 'NULL', 1)
+         elif isinstance(arg, (int, float)):
+             debug_sql = debug_sql.replace('%s', str(arg), 1)
+         else:
+             # 字符串直接加单引号（不需要转义，这只是用于显示）
+             debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
+
+     # 移除SQL注释，避免注释导致SQL无法执行
+     debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
+
+     # 返回调试SQL
+     set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回SQL语句")
+     ```
+
+5. CTE性能优化建议
+   - 使用CTE（WITH语句）可以避免重复扫描大表
+   - 在CTE中使用CASE聚合可以一次性计算多个指标
+   - 示例：
+     ```python
+     sql = '''
+     WITH fee_agg AS (
+         SELECT
+             comm_id,
+             corp_cost_id,
+             SUM(CASE WHEN fee_date < %s THEN due_amount ELSE 0 END) AS prev_due,
+             SUM(CASE WHEN fee_date >= %s AND fee_date <= %s THEN due_amount ELSE 0 END) AS curr_due
+         FROM tb_charge_fee
+         WHERE comm_id IN ({placeholders}) AND is_delete = 0
+         GROUP BY comm_id, corp_cost_id
+     )
+     SELECT * FROM fee_agg
+     '''
+     ```
+
 【总结】
-后续当我给出"报表需求描述"时，你只需要基于上述表结构和规范，直接输出对应的 Python 取数脚本（顶层代码，无需函数包裹），不要输出多余的解释性自然语言。
+后续当我给出"需求描述"时，你只需要基于上述表结构和规范，直接输出对应的 Python 取数脚本（顶层代码，无需函数包裹），不要输出多余的解释性自然语言。
