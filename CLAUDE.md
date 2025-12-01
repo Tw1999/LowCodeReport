@@ -141,7 +141,7 @@
   - 按客户/资源/科目维度做统计：customer_id, resource_id, cost_id, corp_cost_id
 
 五、组织/项目表：erp_base.rf_organize（组织架构 + 项目信息）
-- 表名：pms_base.rf_organize（注意：此表在 pms_base 库中）
+- 项目表：erp_base.rf_organize（注意：此表在 erp_base 库中）
 - 主要用途：
   - 存储组织结构树：集团、区域、公司、项目、部门、岗位等；
   - 其中 OrganType = 6 的记录通常代表“项目”，用于和收费系统中的 comm_id 关联；

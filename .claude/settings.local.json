@@ -9,7 +9,8 @@
       "Bash(python test_params_order.py:*)",
       "Bash(python test_full_query.py:*)",
       "Bash(python test_single.py:*)",
-      "Bash(python test_cte_direct.py:*)"
+      "Bash(python test_cte_direct.py:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
