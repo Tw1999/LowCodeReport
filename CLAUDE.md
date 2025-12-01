@@ -6,10 +6,10 @@
 2. 已封装两个公用方法，可直接使用：
    - db_query(sql, args_tuple)：执行 SQL，返回数据行列表。
    - set_result(rows=None, message="查询成功")：把结果返回给调用方。
-3. 所有 Python 取数脚本约定一个统一入口函数：
-   def run(params: dict):
-       ...
-   - params 为调用方传入的参数字典，例如 {"comm_id": "...", "start_date": "...", "end_date": "..."}。
+3. 脚本执行方式：
+   - 脚本为动态执行模式，无需定义 def run() 函数；
+   - 直接编写顶层代码，通过 params 字典获取调用方传入的参数；
+   - params 为全局可用的参数字典，例如 {"comm_id": "...", "start_date": "...", "end_date": "..."}。
 4. SQL 中一律使用 %s 作为参数占位符，所有参数都通过 args 列表传入，禁止字符串拼接注入参数。
 
 【数据库表结构与业务含义】
@@ -140,8 +140,8 @@
   - 按交易类型：deal_type IN ('实收', '实收红冲', '预存', '预存冲抵', '减免', '退款', ...) 
   - 按客户/资源/科目维度做统计：customer_id, resource_id, cost_id, corp_cost_id
 
-五、组织/项目表：rf_organize（组织架构 + 项目信息）
-- 表名：rf_organize :contentReference[oaicite:0]{index=0}
+五、组织/项目表：pms_base.rf_organize（组织架构 + 项目信息）
+- 表名：pms_base.rf_organize（注意：此表在 pms_base 库中）
 - 主要用途：
   - 存储组织结构树：集团、区域、公司、项目、部门、岗位等；
   - 其中 OrganType = 6 的记录通常代表“项目”，用于和收费系统中的 comm_id 关联；
@@ -235,15 +235,24 @@
 
 【开发规范与输出要求】
 
-1. 每个需求只写一个入口函数：
-   def run(params: dict):
-       """
-       说明：简要描述报表的用途、主要维度、筛选条件。
-       """
-       # 步骤 1：解析入参
-       # 步骤 2：组装 SQL（注意 where 条件和参数顺序）
-       # 步骤 3：调用 db_query 执行 SQL
-       # 步骤 4：通过 set_result 返回结果
+1. 脚本结构（动态执行模式）：
+   # 步骤 1：解析入参（直接从全局 params 字典获取）
+   # 步骤 2：组装 SQL（注意 where 条件和参数顺序）
+   # 步骤 3：调用 db_query 执行 SQL
+   # 步骤 4：通过 set_result 返回结果
+
+   示例：
+   # 开票情况统计表：按项目、科目统计应收、开票、回款
+   sql = '''SELECT * FROM ...'''
+   args = []
+   if params.get("id"):
+       sql += " WHERE id = %s"
+       args.append(params["id"])
+   else:
+       sql += " LIMIT 100"
+
+   dataRows = db_query(sql, tuple(args))
+   set_result(rows=dataRows, message="查询成功")
 
 2. SQL 组装规范：
    - 使用多行字符串定义 SQL：
@@ -270,21 +279,22 @@
    - 必选参数（建议）：comm_id、start_date、end_date（按需求可调整）
    - 常规过滤：
      - is_delete = 0
-     - 若统计“已收”金额：选取 deal_type 为实收/托收确认/代扣等正向收款类型，扣除对应红冲类型。
-     - 若统计“预存使用”：deal_type 包含预存、预存冲抵及相关红冲。
-     - 若统计“违约金”：使用 latefee_amount、latefee_notax_amount 及相关 deal_type。
+     - 若统计"已收"金额：选取 deal_type 为实收/托收确认/代扣等正向收款类型，扣除对应红冲类型。
+     - 若统计"预存使用"：deal_type 包含预存、预存冲抵及相关红冲。
+     - 若统计"违约金"：使用 latefee_amount、latefee_notax_amount 及相关 deal_type。
    - 大表查询时，尽量使用已建索引字段（comm_id, is_delete, fee_date/deal_date, deal_type, customer_id, resource_id, cost_id 等）作为过滤条件。
 
 4. 输出格式要求：
    - 直接调用 set_result(rows=dataRows, message="查询成功")。
-   - 不在函数中打印日志，也不要返回除 rows 以外的大量无用字段说明。
+   - 不打印日志，也不要返回除 rows 以外的大量无用字段说明。
    - 字段命名尽量与 SQL 中的别名保持一致，便于前端/下游使用。
 
-5. 示例输出格式（示意）：
-   - 当我给出具体需求时（例如“统计某项目某时间段内各收费科目的实收金额”），你应该：
-     1）先简述思路（1~3 行中文注释形式写在代码里即可）；
-     2）给出完整 SQL；
-     3）给出完整的 Python run 函数，包含 SQL、参数组装、db_query 调用和 set_result 调用。
+5. 代码输出要求：
+   - 当我给出具体需求时（例如"统计某项目某时间段内各收费科目的实收金额"），你应该：
+     1）开头用 1~3 行中文注释简述思路；
+     2）给出完整 SQL 组装代码；
+     3）给出参数处理、db_query 调用和 set_result 调用的完整代码；
+     4）无需 def run() 函数包裹，直接输出顶层代码。
 
 
 【你接到需求后的工作流程】
@@ -304,10 +314,11 @@
    - 按时间：选择合适的日期字段（fee_date / fee_start_date / fee_end_date / deal_date / bill_date）
    - 按收款类型：deal_type（注意区分正向与红冲、退款等冲销类型）
 
-4. 写出 SQL 和 Python run(params) 实现，并保证：
+4. 写出 SQL 和 Python 脚本实现，并保证：
    - 没有 SQL 注入风险；
    - 逻辑清晰，注释简洁说明统计口径；
-   - 返回字段满足报表需求（可以适当增加别名，便于前端理解）。
+   - 返回字段满足报表需求（可以适当增加别名，便于前端理解）；
+   - 无需 def run() 函数，直接输出顶层可执行代码。
 
 【总结】
-后续当我给出“报表需求描述”时，你只需要基于上述表结构和规范，直接输出对应的 Python 取数脚本（包含 SQL 与 run 函数），不要输出多余的解释性自然语言。
+后续当我给出"报表需求描述"时，你只需要基于上述表结构和规范，直接输出对应的 Python 取数脚本（顶层代码，无需函数包裹），不要输出多余的解释性自然语言。
