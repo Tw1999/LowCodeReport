@@ -8,11 +8,28 @@ import datetime
 comm_ids = params.get("comm_ids", [])  # 项目ID列表（多选必填）
 corp_cost_ids = params.get("corp_cost_ids", [])  # 公司科目ID列表（必选）
 
-# 确保是列表格式（支持元组输入）
-if not isinstance(comm_ids, list):
+# 确保是列表格式（支持多种输入格式：列表、元组、逗号分隔的字符串）
+if isinstance(comm_ids, str):
+    # 如果是字符串,按逗号分隔
+    comm_ids = [x.strip() for x in comm_ids.split(',') if x.strip()]
+elif not isinstance(comm_ids, (list, tuple)):
+    # 如果既不是字符串也不是列表/元组,尝试转换
     comm_ids = list(comm_ids) if comm_ids else []
-if not isinstance(corp_cost_ids, list):
+elif isinstance(comm_ids, tuple):
+    comm_ids = list(comm_ids)
+
+if isinstance(corp_cost_ids, str):
+    # 如果是字符串,按逗号分隔
+    corp_cost_ids = [x.strip() for x in corp_cost_ids.split(',') if x.strip()]
+elif not isinstance(corp_cost_ids, (list, tuple)):
+    # 如果既不是字符串也不是列表/元组,尝试转换
     corp_cost_ids = list(corp_cost_ids) if corp_cost_ids else []
+elif isinstance(corp_cost_ids, tuple):
+    corp_cost_ids = list(corp_cost_ids)
+
+# 清理ID列表中可能存在的引号（生产环境可能传入带引号的值）
+comm_ids = [str(x).strip().strip("'").strip('"') for x in comm_ids]
+corp_cost_ids = [str(x).strip().strip("'").strip('"') for x in corp_cost_ids]
 
 contract_type = params.get("contract_type")  # 合同类别（非必填）
 start_date = params.get("start_date")  # 统计开始时间A（格式：YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS）
@@ -283,8 +300,25 @@ args.append(year_start)  # line 179: d.deal_date < %s
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 
-# 执行查询
-dataRows = db_query(sql, tuple(args))
+# 生成调试SQL(将参数替换到SQL中用于调试)
+debug_sql = sql
+for arg in args:
+    if arg is None:
+        debug_sql = debug_sql.replace('%s', 'NULL', 1)
+    elif isinstance(arg, (int, float)):
+        debug_sql = debug_sql.replace('%s', str(arg), 1)
+    else:
+        # 字符串直接加单引号,不需要转义(这只是用于显示调试,不是真正执行的SQL)
+        debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
 
-# 返回结果
+# 移除SQL注释,避免注释导致SQL无法执行
+import re
+# 移除单行注释 (-- 注释内容)
+debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
+
+# 返回调试SQL供查看
+set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回生成的SQL语句")
+
+# 注释掉实际执行,只返回SQL用于调试
+dataRows = db_query(sql, tuple(args))
 set_result(rows=dataRows, message="查询成功")
