@@ -273,6 +273,38 @@ args.append(year_start)  # d.deal_date < %s
 args.extend(comm_ids)
 args.extend(corp_cost_ids)
 
+# 生成调试SQL（用于问题排查）
+import re
+debug_sql = sql
+for arg in args:
+    if arg is None:
+        debug_sql = debug_sql.replace('%s', 'NULL', 1)
+    elif isinstance(arg, (int, float)):
+        debug_sql = debug_sql.replace('%s', str(arg), 1)
+    else:
+        debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
+# 移除SQL注释
+debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
+# 打印调试信息
+print("调试信息:")
+print(debug_sql)
+
+import re
+debug_sql = sql
+for arg in args:
+    if arg is None:
+        debug_sql = debug_sql.replace('%s', 'NULL', 1)
+    elif isinstance(arg, (int, float)):
+        debug_sql = debug_sql.replace('%s', str(arg), 1)
+    else:
+        debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
+# 移除SQL注释
+debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
+# 打印调试信息
+print("调试信息:")
+print(debug_sql)
+
 # 执行查询
 dataRows = db_query(sql, tuple(args))
+
 set_result(rows=dataRows, message="查询成功")
