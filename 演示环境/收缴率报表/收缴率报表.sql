@@ -1,1 +1,0 @@
-select count(*) from pms_base.rf_user;
