@@ -13,7 +13,8 @@ params = {
     "corp_cost_ids": list(corp_cost_ids),
     "start_date": "2001-1-1",
     "end_date": "2025-12-31",
-    "contract_type": ""
+    "deal_date_end": "",
+    "resource_status":""
 }
 
 conn = pymysql.connect(
@@ -48,6 +49,6 @@ def set_result(rows, message):
         print("没有数据")
 
 # 执行原始脚本
-exec(open('开票情况统计表.py', encoding='utf-8').read())
+exec(open('C:\Tw.Erp\LowCodeReport\演示环境\开票情况统计表\欠费年度统计.py', encoding='utf-8').read())
 
 conn.close()
