@@ -4,17 +4,31 @@ page_size = int(params.get("page_size", 100))  # 每页条数，默认100
 offset = (page - 1) * page_size  # 计算偏移量
 
 # 处理columns参数，支持动态选择字段
+# 定义字段的标准顺序
+standard_fields = ["Id", "MenuId", "Organizes", "time_stamp"]
+
 columns = params.get("columns", "")
 if columns:
-    # 如果传入了columns参数，使用指定的字段
+    # 如果传入了columns参数，解析并按标准顺序排列
     if isinstance(columns, str):
         # 支持逗号分隔的字符串
-        columns = columns.strip()
-    # columns可以直接是字段列表字符串，如 "Id, MenuId, Organizes,time_stamp"
-    select_fields = columns
+        requested_fields = [field.strip() for field in columns.split(',') if field.strip()]
+    elif isinstance(columns, (list, tuple)):
+        requested_fields = [str(field).strip() for field in columns]
+    else:
+        requested_fields = []
+
+    # 按照标准顺序过滤和排序字段
+    ordered_fields = [field for field in standard_fields if field in requested_fields]
+
+    if ordered_fields:
+        select_fields = ", ".join(ordered_fields)
+    else:
+        # 如果没有匹配的字段，使用默认所有字段
+        select_fields = ", ".join(standard_fields)
 else:
     # 默认显示所有字段
-    select_fields = "Id, MenuId, Organizes,time_stamp"
+    select_fields = ", ".join(standard_fields)
 
 sql = f"""
 SELECT {select_fields}
