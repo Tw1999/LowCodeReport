@@ -14,7 +14,9 @@ params = {
     "start_date": "2001-1-1",
     "end_date": "2025-12-31",
     "deal_date_end": "",
-    "resource_status":""
+    "resource_status":"",
+    "page": 1,
+    "page_size": 2
 }
 
 conn = pymysql.connect(
@@ -49,6 +51,6 @@ def set_result(rows, message):
         print("没有数据")
 
 # 执行原始脚本
-exec(open(r'C:\Tw.Erp\LowCodeReport\演示环境\欠费年度统计.py', encoding='utf-8').read())
+exec(open(r'C:\Tw.Erp\LowCodeReport\演示环境\权限表查询.py', encoding='utf-8').read())
 
 conn.close()
