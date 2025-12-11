@@ -3,8 +3,21 @@ page = int(params.get("page", 1))  # 页码，从1开始
 page_size = int(params.get("page_size", 100))  # 每页条数，默认100
 offset = (page - 1) * page_size  # 计算偏移量
 
-sql = """
-SELECT MenuId, Id, Organizes
+# 处理columns参数，支持动态选择字段
+columns = params.get("columns", "")
+if columns:
+    # 如果传入了columns参数，使用指定的字段
+    if isinstance(columns, str):
+        # 支持逗号分隔的字符串
+        columns = columns.strip()
+    # columns可以直接是字段列表字符串，如 "MenuId, Id, Organizes"
+    select_fields = columns
+else:
+    # 默认显示所有字段
+    select_fields = "*"
+
+sql = f"""
+SELECT {select_fields}
 FROM tidb_sync_combine.rf_menuuser
 """
 args = []
