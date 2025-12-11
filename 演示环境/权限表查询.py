@@ -1,6 +1,6 @@
 # 分页查询权限表，默认每页100条，默认第1页
-page = params.get("page", 1)  # 页码，从1开始
-page_size = params.get("page_size", 100)  # 每页条数，默认100
+page = int(params.get("page", 1))  # 页码，从1开始
+page_size = int(params.get("page_size", 100))  # 每页条数，默认100
 offset = (page - 1) * page_size  # 计算偏移量
 
 sql = """
