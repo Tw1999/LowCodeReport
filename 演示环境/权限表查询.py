@@ -19,5 +19,19 @@ sql += " ORDER BY is_delete DESC LIMIT %s OFFSET %s"
 args.append(page_size)
 args.append(offset)
 
-dataRows = db_query(sql, tuple(args))
-set_result(rows=dataRows, message=f"查询成功，第{page}页，每页{page_size}条")
+# 生成调试SQL（将%s替换为实际参数值）
+debug_sql = sql
+for arg in args:
+    if arg is None:
+        debug_sql = debug_sql.replace('%s', 'NULL', 1)
+    elif isinstance(arg, (int, float)):
+        debug_sql = debug_sql.replace('%s', str(arg), 1)
+    else:
+        debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
+
+# 如果传入debug=1参数，只返回SQL不执行查询
+if params.get("debug") == "1":
+    set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回SQL语句")
+else:
+    dataRows = db_query(sql, tuple(args))
+    set_result(rows=dataRows, message=f"查询成功，第{page}页，每页{page_size}条\nSQL: {debug_sql}")

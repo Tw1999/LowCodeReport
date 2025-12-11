@@ -10,7 +10,7 @@ def get_fee_statistics_by_criteria(params: Dict[str, Any]) -> Dict[str, Any]:
     fee_date_start = params.get("fee_date_start")
     fee_date_end = params.get("fee_date_end")
     receipt_end_date = params.get("receipt_end_date")
-    
+
     if not fee_date_start or not fee_date_end:
         return {"rows": [], "years": [], "message": "费用开始时间和结束时间为必填参数"}
     
@@ -53,10 +53,33 @@ def get_fee_statistics_by_criteria(params: Dict[str, Any]) -> Dict[str, Any]:
         fee_date_end=fee_date_end_with_time,
         receipt_end_date=receipt_end_date_with_time
     )
-    
+
+    # 调试模式：返回年份查询SQL（debug=1返回年份SQL，debug=2返回主查询SQL）
+    debug_mode = params.get("debug", "0")
+    if debug_mode == "1":
+        import re
+        debug_year_sql = year_sql
+        for arg in year_args:
+            if arg is None:
+                debug_year_sql = debug_year_sql.replace('%s', 'NULL', 1)
+            elif isinstance(arg, (int, float)):
+                debug_year_sql = debug_year_sql.replace('%s', str(arg), 1)
+            else:
+                debug_year_sql = debug_year_sql.replace('%s', f"'{arg}'", 1)
+        # 移除SQL注释
+        debug_year_sql = re.sub(r'--[^\n]*', '', debug_year_sql)
+        # 移除换行符，用空格替换
+        debug_year_sql = ' '.join(debug_year_sql.split())
+
+        return {
+            "rows": [{"debug_sql": debug_year_sql, "sql_type": "年份查询SQL"}],
+            "years": [],
+            "message": "调试模式-返回年份查询SQL（第一步），如需查看主查询SQL请设置debug=2"
+        }
+
     year_rows = db_query(year_sql, tuple(year_args))
     years = [row['annual'] for row in year_rows if row.get('annual')]
-    
+
     # 如果没有数据,返回空结果
     if not years:
         return {"rows": [], "years": [], "message": "暂无数据"}
@@ -79,16 +102,38 @@ def get_fee_statistics_by_criteria(params: Dict[str, Any]) -> Dict[str, Any]:
         year_columns=year_columns,
         years=years
     )
-    
+
+    # 生成调试SQL（debug=2返回主查询SQL）
+    if debug_mode == "2":
+        import re
+        debug_sql = sql
+        for arg in args:
+            if arg is None:
+                debug_sql = debug_sql.replace('%s', 'NULL', 1)
+            elif isinstance(arg, (int, float)):
+                debug_sql = debug_sql.replace('%s', str(arg), 1)
+            else:
+                debug_sql = debug_sql.replace('%s', f"'{arg}'", 1)
+
+        # 移除SQL注释
+        debug_sql = re.sub(r'--[^\n]*', '', debug_sql)
+        # 移除换行符，用空格替换
+        debug_sql = ' '.join(debug_sql.split())
+
+        return {
+            "rows": [{"debug_sql": debug_sql, "sql_type": "主查询SQL"}],
+            "years": years,
+            "message": f"调试模式-返回主查询SQL（第二步），包含{len(years)}个年份列"
+        }
+
     # 执行查询
     dataRows = db_query(sql, tuple(args))
-    
-    return {
-        "rows": dataRows, 
-        "years": years, 
-        "message": "查询成功"
-    }
 
+    return {
+        "rows": dataRows,
+        "years": years,
+        "message": "查询成功"  # 正常模式不显示SQL，避免影响前端展示
+    }
 
 def ensure_end_of_day(date_str: str) -> str:
     if ' ' in date_str or 'T' in date_str:
@@ -369,3 +414,8 @@ def build_main_query_sql(
 
 def query_fee_statistics(params: Dict[str, Any]) -> Dict[str, Any]:
     return get_fee_statistics_by_criteria(params)
+
+
+# 动态执行入口
+result = get_fee_statistics_by_criteria(params)
+set_result(rows=result["rows"], message=result["message"])
