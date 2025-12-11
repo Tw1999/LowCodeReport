@@ -10,11 +10,11 @@ if columns:
     if isinstance(columns, str):
         # 支持逗号分隔的字符串
         columns = columns.strip()
-    # columns可以直接是字段列表字符串，如 "MenuId, Id, Organizes"
+    # columns可以直接是字段列表字符串，如 "Id, MenuId, Organizes,time_stamp"
     select_fields = columns
 else:
     # 默认显示所有字段
-    select_fields = "*"
+    select_fields = "Id, MenuId, Organizes,time_stamp"
 
 sql = f"""
 SELECT {select_fields}
