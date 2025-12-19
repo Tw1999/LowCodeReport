@@ -11,7 +11,9 @@
       "Bash(python test_single.py:*)",
       "Bash(python test_cte_direct.py:*)",
       "Bash(dir:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(powershell -Command \"(Get-Content ''c:\\Tw.Erp\\LowCodeReport\\演示环境\\欠费查询年度报表.py'' | Measure-Object -Line).Lines\")",
+      "Bash(Select-Object -First 50)"
     ],
     "deny": [],
     "ask": []
