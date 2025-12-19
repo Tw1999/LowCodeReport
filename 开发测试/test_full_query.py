@@ -50,26 +50,6 @@ def set_result(rows, message):
     if len(rows) > 0 and isinstance(rows[0], dict):
         first_row = rows[0]
 
-        # 如果包含调试SQL字段，特殊处理
-        if 'year_query_sql' in first_row or 'main_query_sql' in first_row:
-            if 'year_query_sql' in first_row:
-                print("\n========== 年份查询SQL ==========")
-                print(first_row['year_query_sql'])
-
-            if 'main_query_sql' in first_row:
-                print("\n========== 主查询SQL ==========")
-                print(first_row['main_query_sql'])
-
-            if 'years_found' in first_row:
-                print(f"\n查询到的年份: {first_row['years_found']}")
-
-            if 'debug_info' in first_row:
-                print(f"\n调试信息: {first_row['debug_info']}")
-        else:
-            # 正常数据输出
-            print(f"\n前5行数据:")
-            for i, row in enumerate(rows[:5], 1):
-                print(f"{i}. {row}")
     elif len(rows) == 0:
         print("没有数据")
 
@@ -80,7 +60,7 @@ print("\n========== 开始执行查询 ==========")
 params = params['params']
 
 # 执行脚本
-exec(open(r'C:\Tw.Erp\LowCodeReport\演示环境\欠费查询年度报表.py', encoding='utf-8').read())
+exec(open(r'D:\Tw.Erp\LowCodeReport\开发测试\欠费查询.py', encoding='utf-8').read())
 
 print("\n========== 查询完成 ==========")
 
