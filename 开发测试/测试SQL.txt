@@ -1,0 +1,4 @@
+main_sql = "SELECT *from erp_base.rf_organize LIMIT 10"
+args = []
+data_rows = db_query(main_sql, tuple(args))
+set_result(rows=data_rows, message="查询成功")
