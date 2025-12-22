@@ -1,4 +1,5 @@
 import datetime
+import traceback
 
 # 解析入参（实际环境中由外部传入）
 params = {}
@@ -207,5 +208,3 @@ ORDER BY
     else:
         set_result(rows=data_rows, message=f"查询成功，共显示{year_count}个年度")
 
-except Exception as e:
-    set_result(rows=[], message=f"查询失败：{str(e)}")

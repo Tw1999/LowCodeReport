@@ -39,10 +39,10 @@ def db_query(sql, args):
         cursor.close()
 
 def set_result(rows, message):
-    print(f"{message}")
+    print(f"\n{message}")
     print(f"返回行数: {len(rows)}")
     if len(rows) > 0:
-        print("前5行数据:")
+        print(f"\n前5行数据:")
         for i, row in enumerate(rows[:5], 1):
             print(f"{i}. {row}")
     else:
