@@ -345,7 +345,33 @@ placeholders = ','.join(['%s'] * len(default_types))
 sql += f" AND d.deal_type IN ({placeholders})"
 args.extend(default_types)
 
-# 排序和分页（必须在所有WHERE条件之后）
+# 先执行COUNT查询获取总条数(在添加分页参数前,使用相同的WHERE条件和参数)
+count_sql = '''
+SELECT COUNT(1) as total_count
+FROM tidb_sync_combine.tb_charge_receipts_detail d
+LEFT JOIN tidb_sync_combine.tb_charge_fee f ON d.fee_id = f.id AND f.is_delete = 0
+LEFT JOIN erp_base.rf_organize o2 ON LOWER(d.comm_id) = LOWER(o2.Id) AND o2.Is_Delete = 0 AND o2.Status = 0
+LEFT JOIN erp_base.rf_organize o1 ON LOWER(o2.ParentId) = LOWER(o1.Id) AND o1.Is_Delete = 0 AND o1.Status = 0
+LEFT JOIN erp_base.tb_base_masterdata_customer_comm cus ON d.customer_id = cus.id AND cus.is_delete = 0
+LEFT JOIN erp_base.tb_base_masterdata_resource res ON d.resource_id = res.id AND res.is_delete = 0
+LEFT JOIN erp_base.tb_base_masterdata_resource resgroup on res.resource_group = resgroup.id
+LEFT JOIN erp_base.tb_base_charge_cost cc ON d.corp_cost_id = cc.id AND cc.is_delete = 0
+LEFT JOIN erp_base.tb_base_charge_comm_stan stan ON d.stan_id = stan.id AND stan.is_delete = 0
+LEFT JOIN tidb_sync_combine.tb_base_charge_bill_use usepiao on d.pay_flow_id = usepiao.pay_flow_id
+LEFT JOIN tidb_sync_combine.tb_charge_trade_flow_pay flowpay on d.pay_flow_id = flowpay.id
+LEFT JOIN erp_base.rf_user users on d.deal_user = users.id
+WHERE d.is_delete = 0
+''' + sql.split('WHERE d.is_delete = 0')[1]  # 复用WHERE条件
+
+# 执行COUNT查询(注意:此时args中还没有分页参数)
+try:
+    count_result = db_query(count_sql, tuple(args))
+    total_count = count_result[0]['total_count'] if count_result else 0
+except Exception as e:
+    print(f"COUNT查询失败: {str(e)}")
+    total_count = 0
+
+# 排序和分页（必须在COUNT查询之后添加）
 sql += " ORDER BY d.deal_date DESC, d.id DESC LIMIT %s OFFSET %s"
 args.append(page_size)
 args.append(offset)
@@ -353,7 +379,7 @@ args.append(offset)
 # 执行查询
 try:
     dataRows = db_query(sql, tuple(args))
-    
+
     # 调试模式处理
     if debug_mode:
         # 调试信息：打印SQL和参数，方便调试
@@ -392,11 +418,11 @@ try:
         print(f"=====================")
         
         # 调试模式下返回SQL和参数
-        debug_message = f"查询成功（调试模式）\nSQL: {executable_sql}\n返回行数: {len(dataRows)}"
-        set_result(rows=dataRows, message=debug_message)
+        debug_message = f"查询成功（调试模式）\nSQL: {executable_sql}\n返回行数: {len(dataRows)}\n总记录数: {total_count}"
+        set_result(rows=dataRows, message=debug_message, total_count=total_count)
     else:
-        # 正常模式下只返回结果
-        set_result(rows=dataRows, message="查询成功")
+        # 正常模式下返回结果，将total_count作为额外参数传递
+        set_result(rows=dataRows, message="查询成功", total_count=total_count)
 except Exception as e:
     # 执行失败时的处理
     print(f"=== SQL执行异常 ===")
@@ -442,8 +468,8 @@ except Exception as e:
         
         # 调试模式下返回错误信息和完整SQL
         error_message = f"查询失败: {str(e)}\nSQL: {executable_sql}\n异常详情: {repr(e)}"
-        set_result(rows=[], message=error_message)
+        set_result(rows=[], message=error_message, total_count=0)
     else:
         # 正常模式下只返回错误信息
-        set_result(rows=[], message=f"查询失败: {str(e)}")
+        set_result(rows=[], message=f"查询失败: {str(e)}", total_count=0)
     raise
