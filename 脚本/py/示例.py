@@ -41,7 +41,20 @@ if params.get("id"):
     sql += " WHERE id = %s"
     args.append(params["id"])
 
-# 排序和分页
+# 先执行COUNT查询获取总条数(在添加分页参数前,使用相同的WHERE条件和参数)
+count_sql = "SELECT COUNT(1) as total_count FROM erp_base.rf_menuuser"
+if params.get("id"):
+    count_sql += " WHERE id = %s"
+
+# 执行COUNT查询(注意:此时args中还没有分页参数)
+try:
+    count_result = db_query(count_sql, tuple(args))
+    total_count = count_result[0]['total_count'] if count_result else 0
+except Exception as e:
+    print(f"COUNT查询失败: {str(e)}")
+    total_count = 0
+
+# 排序和分页(必须在COUNT查询之后添加)
 sql += " ORDER BY is_delete DESC LIMIT %s OFFSET %s"
 args.append(page_size)
 args.append(offset)
@@ -58,7 +71,7 @@ for arg in args:
 
 # 如果传入debug=1参数，只返回SQL不执行查询
 if params.get("debug") == "1":
-    set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回SQL语句")
+    set_result(rows=[{"debug_sql": debug_sql}], message="调试模式-返回SQL语句", total_count=total_count)
 else:
     dataRows = db_query(sql, tuple(args))
-    set_result(rows=dataRows, message=f"查询成功，第{page}页，每页{page_size}条\nSQL: {debug_sql}")
+    set_result(rows=dataRows, message=f"查询成功，第{page}页，每页{page_size}条，总记录数{total_count}\nSQL: {debug_sql}", total_count=total_count)
