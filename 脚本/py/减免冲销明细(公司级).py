@@ -269,7 +269,7 @@ if is_cancel == '0' and cancel_type:
 
 # 如果有错误信息，直接返回错误
 if error_message:
-    set_result(message=error_message)
+    set_result(message=error_message, total_count=0)
     # 在脚本执行环境中，不能使用return，直接结束执行
     # 通过判断条件让后续代码不执行
     pass
@@ -460,7 +460,30 @@ END AS resource_status,
             sql += " AND d.deal_date <= %s"
             args.append(deal_date_end)
 
-    # 排序和分页（必须在所有WHERE条件之后）
+    # 先执行COUNT查询获取总条数(在添加分页参数前,使用相同的WHERE条件和参数)
+    count_sql = """
+    SELECT COUNT(1) as total_count
+    FROM tidb_sync_combine.tb_charge_receipts_detail d
+    LEFT JOIN tidb_sync_combine.rf_organize o ON LOWER(d.comm_id) = LOWER(o.Id) AND o.OrganType = 6 AND o.Is_Delete = 0 AND o.Status = 0
+    LEFT JOIN tidb_sync_combine.rf_organize o1 ON o.ParentId = o1.Id AND o1.Is_Delete = 0 AND o1.Status = 0
+    LEFT JOIN tidb_sync_combine.tb_base_masterdata_resource r ON d.resource_id = r.id
+    LEFT JOIN tidb_sync_combine.tb_base_charge_cost c ON LOWER(d.corp_cost_id) =  LOWER(c.id) AND c.is_delete = 0
+    LEFT JOIN tidb_sync_combine.tb_base_charge_comm_stan st ON d.stan_id = st.id AND st.is_delete = 0
+    LEFT JOIN tidb_sync_combine.tb_charge_fee f ON d.fee_id = f.id AND f.is_delete = 0
+    LEFT JOIN tidb_sync_combine.tb_base_charge_bill_use b ON d.pay_flow_id = b.pay_flow_id AND b.is_delete = 0  and b.pay_flow_id <>''
+    LEFT JOIN tidb_sync_combine.tb_base_masterdata_customer_comm cc ON d.customer_id = cc.id AND cc.is_delete = 0
+    WHERE 1=1
+    """ + sql.split("WHERE 1=1")[1]  # 复用WHERE条件
+
+    # 执行COUNT查询(注意:此时args中还没有分页参数)
+    try:
+        count_result = db_query(count_sql, tuple(args))
+        total_count = count_result[0]['total_count'] if count_result else 0
+    except Exception as e:
+        print(f"COUNT查询失败: {str(e)}")
+        total_count = 0
+
+    # 排序和分页（必须在COUNT查询之后添加）
     # 修改排序：按照r.resource_code、cc.name、c.cost_name、d.fee_date进行升序排序
     sql += " ORDER BY r.resource_code ASC, cc.name ASC, c.cost_name ASC, d.fee_date ASC, d.is_delete DESC LIMIT %s OFFSET %s"
     args.append(page_size)
@@ -470,20 +493,20 @@ END AS resource_status,
     try:
         # 执行查询
         dataRows = db_query(sql, tuple(args))
-        
+
         # 根据调试模式返回不同结果
         if debug_mode:
             # 调试模式下将SQL和参数添加到message中返回
-            debug_message = f"查询成功（调试模式）\nSQL: {sql}\nParams: {args}"
-            set_result(rows=dataRows, message=debug_message)
+            debug_message = f"查询成功（调试模式）\nSQL: {sql}\nParams: {args}\n总记录数: {total_count}"
+            set_result(rows=dataRows, message=debug_message, total_count=total_count)
         else:
             # 正常模式下只返回结果
-            set_result(rows=dataRows, message="查询成功")
+            set_result(rows=dataRows, message=f"查询成功，共{total_count}条数据，当前第{page}页", total_count=total_count)
     except Exception as e:
         # 异常情况下也将SQL和参数添加到message中返回（如果处于调试模式）
         if debug_mode:
             error_message = f"查询失败: {str(e)}\nSQL: {sql}\nParams: {args}"
-            set_result(rows=[], message=error_message)
+            set_result(rows=[], message=error_message, total_count=0)
         else:
-            set_result(message=f"查询失败: {str(e)}")
+            set_result(message=f"查询失败: {str(e)}", total_count=0)
         raise

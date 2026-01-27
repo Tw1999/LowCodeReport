@@ -1,0 +1,665 @@
+{
+  "type": "page",
+  "id": "u:78013e50fdec",
+  "title": "减免冲销明细报表",
+  "body": [
+    {
+      "type": "flex",
+      "id": "u:f6b3a1032d40",
+      "direction": "row",
+      "alignItems": "stretch",
+      "style": {
+        "height": "calc(100vh - 180px)",
+        "gap": "16px",
+        "flexWrap": "nowrap",
+        "position": "static"
+      },
+      "items": [
+        {
+          "type": "form",
+          "id": "u:0324f2443704",
+          "title": "",
+          "wrapWithPanel": true,
+          "mode": "vertical",
+          "style": {
+            "width": "360px",
+            "border": "none",
+            "background": "linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%)",
+            "height": "calc(100vh - 105px)",
+            "--Form-item-gap": "8px",
+            "--Form-group-gap": "8px"
+          },
+          "labelAlign": "left",
+          "body": [
+            {
+              "type": "tpl",
+              "id": "u:55ac1b6dbe8d",
+              "tpl": "<div style=\"background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px 12px 0 0; margin: -16px -16px 20px -16px;\">\n<div style=\"display: flex; align-items: center; justify-content: space-between; color: white;\">\n<div style=\"display: flex; align-items: center; gap: 10px;\">\n<div>\n<div style=\"font-size: 16px; font-weight: bold;\">筛选条件</div>\n<div style=\"font-size: 12px; opacity: 0.9;\">支持多维度精确搜索（可选）</div>\n</div>\n</div>\n</div>\n</div>",
+              "inline": false
+            },
+            {
+              "type": "tree-select",
+              "label": "项目选择",
+              "name": "comm_ids",
+              "id": "u:c4633a8ac53a",
+              "mode": "normal",
+              "labelAlign": "top",
+              "value": "",
+              "className": "mb-2",
+              "multiple": true,
+              "clearable": false,
+              "autoCheckChildren": true,
+              "nodeBehavior": [
+                "check",
+                "unfold"
+              ],
+              "showIcon": true,
+              "onlyChildren": true,
+              "joinValues": true,
+              "searchable": true,
+              "onlyLeaf": false,
+              "hidden": false,
+              "themeCss": {
+                "actionControlClassName": {
+                  "marginLeft": ""
+                },
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed",
+                  "max-height": "120px",
+                  "overflow-y": "auto"
+                }
+              },
+              "hideNodePathLabel": true,
+              "source": {
+                "method": "get",
+                "url": "/amis/designer/comm-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "placeholder": "请选择项目（必填）",
+              "maxTagCount": 3,
+              "overflowTagPopover": {
+                "placement": "bottom"
+              },
+              "lazyLoad": true
+            },
+            {
+              "type": "tree-select",
+              "label": "筛选费项",
+              "name": "corp_cost_ids",
+              "id": "u:fa108431dee8",
+              "mode": "normal",
+              "labelAlign": "top",
+              "multiple": true,
+              "clearable": false,
+              "autoCheckChildren": true,
+              "nodeBehavior": [
+                "check",
+                "unfold"
+              ],
+              "showIcon": true,
+              "onlyChildren": true,
+              "joinValues": true,
+              "searchable": true,
+              "onlyLeaf": false,
+              "hidden": false,
+              "value": "",
+              "themeCss": {
+                "actionControlClassName": {
+                  "marginLeft": ""
+                },
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed",
+                  "max-height": "120px",
+                  "overflow-y": "auto"
+                }
+              },
+              "hideNodePathLabel": true,
+              "source": {
+                "method": "get",
+                "url": "/amis/designer/cost-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "placeholder": "请选择费项（不选则查询所有）",
+              "maxTagCount": 3,
+              "overflowTagPopover": {
+                "placement": "bottom"
+              },
+              "lazyLoad": true
+            },
+            {
+              "type": "input-datetime",
+              "label": "费用开始日期",
+              "name": "fee_start_date",
+              "id": "u:8d58aa52d603",
+              "valueFormat": "X",
+              "placeholder": "请选择日期以及时间",
+              "value": "915120000",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "minDate": "",
+              "maxDate": ""
+            },
+            {
+              "type": "input-datetime",
+              "id": "u:84029f0b0870",
+              "label": "费用结束日期",
+              "name": "fee_end_date",
+              "valueFormat": "X",
+              "placeholder": "请选择日期以及时间",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "value": "1769875199",
+              "minDate": "",
+              "maxDate": ""
+            },
+            {
+              "type": "input-datetime",
+              "label": "减免冲抵开始日期",
+              "name": "deal_date_start",
+              "id": "u:80b750641519",
+              "value": "",
+              "placeholder": "请选择日期以及时间",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "minDate": "1999-01-01 00:00:00",
+              "maxDate": "2099-12-31 23:59:59"
+            },
+            {
+              "type": "input-datetime",
+              "label": "减免冲抵结束日期",
+              "id": "u:8ccf22bc452c",
+              "name": "deal_date_end",
+              "placeholder": "请选择日期以及时间",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "minDate": "1999-01-01 00:00:00",
+              "maxDate": "2099-12-31 23:59:59",
+              "value": ""
+            },
+            {
+              "type": "select",
+              "id": "u:5c3f7eddedb4",
+              "label": "是否撤销",
+              "name": "is_cancel",
+              "options": [
+                {
+                  "label": "是",
+                  "value": "1"
+                },
+                {
+                  "label": "否",
+                  "value": "0"
+                }
+              ],
+              "multiple": false,
+              "value": "0"
+            },
+            {
+              "type": "select",
+              "label": "撤销类型",
+              "name": "cancel_type",
+              "options": [
+                {
+                  "label": "直接撤销",
+                  "value": "直接撤销"
+                },
+                {
+                  "label": "红冲撤销",
+                  "value": "红冲撤销"
+                }
+              ],
+              "id": "u:89b6c98db720",
+              "multiple": false
+            },
+            {
+              "type": "action",
+              "label": "",
+              "id": "u:9b9cc9e66604",
+              "body": [
+                {
+                  "type": "button-group",
+                  "buttons": [
+                    {
+                      "type": "button",
+                      "label": "🔄 重置所有",
+                      "level": "light",
+                      "className": "mr-2",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "reset",
+                              "componentId": "u:0324f2443704"
+                            },
+                            {
+                              "actionType": "setValue",
+                              "args": {
+                                "value": {
+                                  "page": 1,
+                                  "page_size": 20,
+                                  "ts": "${TIMESTAMP()}"
+                                }
+                              },
+                              "componentId": "u:78013e50fdec"
+                            },
+                            {
+                              "actionType": "toast",
+                              "args": {
+                                "msgType": "success",
+                                "msg": "已重置所有筛选条件",
+                                "position": "top-center"
+                              }
+                            },
+                            {
+                              "actionType": "reload",
+                              "componentId": "u:6f1ee8158eed"
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:728336b14862",
+                      "disabledOnAction": false
+                    },
+                    {
+                      "type": "button",
+                      "label": "查询全部",
+                      "level": "primary",
+                      "icon": "fa fa-chart-bar",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.comm_ids",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择项目!",
+                                "position": "top-center",
+                                "closeButton": true,
+                                "showIcon": true,
+                                "className": "theme-toast-action-scope"
+                              }
+                            },
+                            {
+                              "actionType": "setValue",
+                              "componentId": "u:78013e50fdec",
+                              "expression": "!!event.data.comm_ids",
+                              "args": {
+                                "value": {
+                                  "comm_ids": "${comm_ids|default:[]}",
+                                  "page": 1,
+                                  "ts": "${TIMESTAMP()}"
+                                }
+                              }
+                            },
+                            {
+                              "actionType": "reload",
+                              "expression": "!!event.data.comm_ids",
+                              "componentId": "u:6f1ee8158eed",
+                              "data": {
+                                "comm_ids": "${comm_ids|default:[]}",
+                                "corp_cost_ids": "${corp_cost_ids|default:[]}",
+                                "fee_start_date": "${fee_start_date|date:YYYY-MM-DD}",
+                                "fee_end_date": "${fee_end_date|date:YYYY-MM-DD}",
+                                "deal_date_start": "${deal_date_start|date:YYYY-MM-DD}",
+                                "deal_date_end": "${deal_date_end|date:YYYY-MM-DD}",
+                                "is_cancel": "${is_cancel|default:[]}",
+                                "cancel_type": "${cancel_type|default:[]}",
+                                "ts": "${TIMESTAMP()}"
+                              },
+                              "outputVar": "outputData"
+                            },
+                            {
+                              "actionType": "custom",
+                              "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';",
+                              "expression": "!!event.data.comm_ids"
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:8f9986929173",
+                      "disabledOnAction": false,
+                      "className": "mb-2"
+                    }
+                  ],
+                  "id": "u:484ce47c1e51"
+                }
+              ]
+            }
+          ],
+          "feat": "Insert",
+          "dsType": "api",
+          "panelClassName": "shadow-md border-radius-lg",
+          "disabled": false,
+          "actions": []
+        },
+        {
+          "type": "container",
+          "id": "u:iframe-container",
+          "style": {
+            "flex": "1",
+            "position": "static",
+            "display": "flex",
+            "height": "calc(100vh - 105px)",
+            "overflow": "hidden",
+            "flexDirection": "column",
+            "flexWrap": "nowrap"
+          },
+          "body": [
+            {
+              "type": "html",
+              "id": "u:6893bd49d8c2",
+              "visibleOn": "!data.comm_ids",
+              "html": "<div style='width:100%; text-align:center; color:#999; font-size:16px;'>请点击查询进行搜索</div>",
+              "style": {
+                "flex": "1",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "minHeight": "300px"
+              }
+            },
+            {
+              "type": "flex",
+              "id": "u:pagination-container",
+              "visibleOn": "!!data.comm_ids",
+              "direction": "row",
+              "justify": "flex-start",
+              "alignItems": "center",
+              "style": {
+                "backgroundColor": "#fafafa",
+                "gap": "12px",
+                "flexWrap": "nowrap",
+                "position": "static",
+                "flexShrink": "0"
+              },
+              "items": [
+                {
+                  "type": "button",
+                  "label": "上一页",
+                  "level": "default",
+                  "size": "sm",
+                  "id": "u:prev-page-btn",
+                  "disabledOn": "${page <= 1}",
+                  "onEvent": {
+                    "click": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": "${page - 1}",
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "input-number",
+                  "name": "page",
+                  "id": "u:page-input",
+                  "value": 1,
+                  "min": 1,
+                  "size": "sm",
+                  "style": {
+                    "width": "80px",
+                    "marginBottom": "0"
+                  },
+                  "prefix": "第",
+                  "suffix": "页",
+                  "keyboard": true,
+                  "onEvent": {
+                    "change": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "button",
+                  "label": "下一页",
+                  "level": "default",
+                  "size": "sm",
+                  "id": "u:next-page-btn",
+                  "onEvent": {
+                    "click": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": "${page + 1}",
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "divider",
+                  "direction": "vertical",
+                  "style": {
+                    "height": "20px",
+                    "margin": "0 8px"
+                  },
+                  "id": "u:438327f32754"
+                },
+                {
+                  "id": "u:693951df2636",
+                  "type": "tpl",
+                  "tpl": "每页",
+                  "style": {},
+                  "themeCss": {
+                    "baseControlClassName": {
+                      "font:default": {
+                        "fontSize": "14px",
+                        "color": "#666"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "select",
+                  "id": "u:pagesize-select",
+                  "style": {
+                    "width": "90px",
+                    "marginBottom": "0"
+                  },
+                  "size": "sm",
+                  "onEvent": {
+                    "change": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": 1,
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  },
+                  "name": "page_size",
+                  "value": 20,
+                  "options": [
+                    {
+                      "label": "10条",
+                      "value": 10
+                    },
+                    {
+                      "label": "20条",
+                      "value": 20
+                    },
+                    {
+                      "label": "50条",
+                      "value": 50
+                    },
+                    {
+                      "label": "100条",
+                      "value": 100
+                    }
+                  ]
+                },
+                {
+                  "type": "divider",
+                  "direction": "vertical",
+                  "style": {
+                    "height": "20px",
+                    "margin": "0 8px"
+                  },
+                  "id": "u:efdff8dc0c08"
+                }
+              ],
+              "themeCss": {
+                "baseControlClassName": {
+                  "border:default": {
+                    "borderBottom": "1px solid #e8e8e8"
+                  },
+                  "padding-and-margin:default": {
+                    "padding": "10px 15px"
+                  }
+                }
+              }
+            },
+            {
+              "type": "iframe",
+              "id": "u:6f1ee8158eed",
+              "src": "/ureport/preview?_u=file:waiv_details.xml&comm_id=${comm_ids}&corp_cost_ids=${corp_cost_ids}&fee_start_date=${fee_start_date}&fee_end_date=${fee_end_date}&waive_reason=${waive_reason}&deal_date_start=${deal_date_start}&deal_date_end=${deal_date_end}&is_cancel=${is_cancel}&cancel_type=${cancel_type}&token=${token}&page=${page | default: 1}&page_size=${page_size | default: 20}&ts=${ts}",
+              "animations": {},
+              "visibleOn": "!!data.comm_ids",
+              "style": {
+                "display": "block",
+                "flex": "1",
+                "minHeight": "0",
+                "minWidth": "0",
+                "width": "100%",
+                "height": "calc(100vh - 160px)",
+                "border": "none"
+              }
+            },
+            {
+              "type": "container",
+              "id": "loading-mask",
+              "body": [
+                {
+                  "type": "html",
+                  "html": "<div id='loadingdiv' name='loadingdiv'><i class='fa fa-spinner fa-spin'></i> 页面加载中，请稍候...</div>",
+                  "id": "u:665c71b65e2b"
+                }
+              ],
+              "style": {
+                "position": "absolute",
+                "top": "0",
+                "left": "0",
+                "right": "0",
+                "bottom": "0",
+                "zIndex": 999,
+                "display": "none",
+                "alignItems": "center",
+                "justifyContent": "center"
+              },
+              "themeCss": {
+                "baseControlClassName": {
+                  "background:default": "rgba(255,255,255,0.8)",
+                  "font:default": {
+                    "fontSize": "18px"
+                  }
+                }
+              }
+            }
+          ],
+          "themeCss": {
+            "baseControlClassName": {
+              "border:default": {
+                "border": "1px solid #eee"
+              }
+            }
+          },
+          "isFixedHeight": false,
+          "animations": {}
+        }
+      ],
+      "isFixedHeight": false,
+      "isFixedWidth": false
+    }
+  ],
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": false
+  },
+  "regions": [
+    "body",
+    "header"
+  ],
+  "initApi": {
+    "method": "get",
+    "url": "dummy",
+    "adaptor": "const m = document.cookie.match(/(?:^|; )roadflow-token=([^;]+)/); const token = m ? decodeURIComponent(m[1]) : ''; window.addEventListener('message', function(e) { if (e.data === 'iframeLoaded') { document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'none'; } }); return { status: 0, data: { token } };"
+  },
+  "data": {
+    "feeDate": "",
+    "page": 1,
+    "selectedColumns": "",
+    "page_size": 20,
+    "ts": "${TIMESTAMP()}"
+  },
+  "dsType": "api",
+  "labelAlign": "left"
+}
