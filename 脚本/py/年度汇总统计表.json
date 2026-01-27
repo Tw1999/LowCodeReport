@@ -338,7 +338,7 @@
                             },
                             {
                               "actionType": "custom",
-                              "expression": "!!event.data.comm_ids && !!event.data.corp_cost_ids && !!event.data.start_date && !!event.data.end_date",
+                              "expression": "!!event.data.comm_ids && !!event.data.dealDateStart && !!event.data.dealDateEnd",
                               "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
                             }
                           ]
