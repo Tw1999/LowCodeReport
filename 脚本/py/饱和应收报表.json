@@ -1,0 +1,321 @@
+{
+  "type": "page",
+  "id": "u:78013e50fdec",
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": false
+  },
+  "body": [
+    {
+      "type": "flex",
+      "id": "u:f6b3a1032d40",
+      "style": {
+        "flexWrap": "nowrap",
+        "position": "static",
+        "height": "calc(100vh - 105px)",
+        "gap": "16px"
+      },
+      "isFixedHeight": false,
+      "isFixedWidth": false,
+      "direction": "row",
+      "alignItems": "stretch",
+      "items": [
+        {
+          "type": "form",
+          "id": "u:0324f2443704",
+          "title": "",
+          "body": [
+            {
+              "type": "tpl",
+              "id": "u:55ac1b6dbe8d",
+              "tpl": "<div style=\"background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px 12px 0 0; margin: -16px -16px 20px -16px;\">\n<div style=\"display: flex; align-items: center; justify-content: space-between; color: white;\">\n<div style=\"display: flex; align-items: center; gap: 10px;\">\n<div>\n<div style=\"font-size: 16px; font-weight: bold;\">筛选条件</div>\n<div style=\"font-size: 12px; opacity: 0.9;\">支持多维度精确搜索（可选）</div>\n</div>\n</div>\n</div>\n</div>",
+              "inline": false
+            },
+            {
+              "type": "tree-select",
+              "label": "项目选择",
+              "name": "comm_ids",
+              "id": "u:c4633a8ac53a",
+              // "inputClassName": "custom-tree-select",
+              "mode": "normal",
+              "labelAlign": "top",
+              "multiple": true,
+              "clearable": false,
+              "autoCheckChildren": true,
+              "nodeBehavior": [
+                "check",
+                "unfold"
+              ],
+              "showIcon": true,
+              "onlyChildren": true, // 明确是否只允许选择叶子节点
+              "joinValues": true,
+              "searchable": true,
+              "onlyLeaf": false,
+              "hideNodePathLabel": true,
+              "source": {
+                "method": "get",
+                "url": "/amis/designer/comm-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "themeCss": {
+                "actionControlClassName": {
+                  "marginLeft": ""
+                },
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed",
+                  "max-height": "120px",
+                  "overflow-y": "auto"
+                }
+              },
+              "hidden": false,
+              "value": "",
+              "className": "mb-2",
+              "placeholder": "请选择项目（必填）",
+              "maxTagCount": 3, // 添加：限制显示标签数量
+              "overflowTagPopover": {
+                "placement": "bottom"
+              }, // 添加：超出标签显示方式
+              "lazyLoad": true // 添加：懒加载提升性能
+            },
+            {
+              "type": "tree-select",
+              "label": "筛选费项",
+              "name": "corp_cost_ids",
+              "id": "u:45d3aac99572",
+              "placeholder": "请选择费项（不选则查询所有）",
+              "multiple": true,
+              "clearable": false,
+              "autoCheckChildren": true,
+              "nodeBehavior": [
+                "check",
+                "unfold"
+              ],
+              "showIcon": true,
+              "onlyChildren": true,
+              "joinValues": true,
+              "searchable": true,
+              "onlyLeaf": false,
+              "hidden": false,
+              "value": "",
+              "themeCss": {
+                "actionControlClassName": {
+                  "marginLeft": ""
+                },
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed",
+                  "max-height": "120px",
+                  "overflow-y": "auto"
+                }
+              },
+              "mode": "normal",
+              "labelAlign": "top",
+              "hideNodePathLabel": true,
+              "source": {
+                "method": "get",
+                "url": "https://yserp.tw369.com/amis/designer/cost-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "maxTagCount": 3, // 添加：限制显示标签数量
+              "overflowTagPopover": {
+                "placement": "bottom"
+              }, // 添加：超出标签显示方式
+              "lazyLoad": true // 添加：懒加载提升性能
+            },
+            {
+              "type": "action",
+              "id": "u:9b9cc9e66604",
+              "label": "",
+              "body": [
+                {
+                  "type": "button-group",
+                  "buttons": [
+                    {
+                      "type": "button",
+                      "label": "🔄 重置所有",
+                      "level": "light",
+                      "className": "mr-2",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "reset",
+                              "componentId": "u:0324f2443704"
+                            },
+                            {
+                              "actionType": "toast",
+                              "args": {
+                                "msgType": "success",
+                                "msg": "已重置所有筛选条件",
+                                "position": "top-center"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:728336b14862"
+                    },
+                    {
+                      "type": "button",
+                      "label": "🚀 查询全部",
+                      "level": "primary",
+                      "icon": "fa fa-chart-bar",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.comm_ids",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择项目!",
+                                "position": "top-center",
+                                "closeButton": true,
+                                "showIcon": true,
+                                "className": "theme-toast-action-scope"
+                              }
+                            },
+                            {
+                              "actionType": "setValue",
+                              "componentId": "u:78013e50fdec",
+                              "expression": "!!event.data.comm_ids",
+                              "args": {
+                                "value": {
+                                  "comm_ids": "${comm_ids|default:[]}"
+                                }
+                              }
+                            },
+                            {
+                              "actionType": "reload",
+                              "expression": "!!event.data.comm_ids",
+                              "componentId": "u:6f1ee8158eed",
+                              "data": {
+                                "comm_ids": "${comm_ids|default:[]}",
+                                "corp_cost_ids": "${corp_cost_ids|default:[]}"
+                              },
+                              "outputVar": "outputData"
+                            },
+                            {
+                              "actionType": "custom",
+                              "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';",
+                              "expression": "!!event.data.comm_ids"
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:8f9986929173",
+                      "disabledOnAction": false,
+                      "className": "mb-2"
+                    }
+                  ],
+                  "id": "u:484ce47c1e51"
+                }
+              ]
+            }
+          ],
+          "wrapWithPanel": true,
+          "mode": "vertical",
+          "style": {
+            "width": "360px",
+            "border": "none",
+            "background": "linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%)",
+            "height": "calc(100vh - 105px)"
+          },
+          "labelAlign": "left",
+          "feat": "Insert",
+          "dsType": "api",
+          "panelClassName": "shadow-md border-radius-lg",
+          "disabled": false
+        },
+        {
+          "type": "container",
+          "id": "u:iframe-container",
+          "style": {
+            "flex": "1",
+            "overflow": "hidden",
+            "position": "relative",
+            "display": "block",
+            "inset": "auto",
+            "flexWrap": "nowrap",
+            "height": "calc(100vh - 105px)"
+          },
+          "body": [
+            {
+              "type": "html",
+              "id": "u:6893bd49d8c2",
+              "visibleOn": "!data.comm_ids",
+              "html": "<div style='width:100%; text-align:center; color:#999; font-size:16px; padding-top:200px;'>请点击查询进行搜索</div>"
+            },
+            {
+              "type": "iframe",
+              "id": "u:6f1ee8158eed",
+              "visibleOn": "!!data.comm_ids",
+              "style": {
+                "height": "calc(100vh - 155px)"
+              },
+              "src": "/ureport/preview?_u=file:Saturation_Receivable.xml&comm_id=${comm_ids}&corp_cost_id=${corp_cost_ids}&token=${token}&page=${page}&page_size=${page_size}",
+              "width": "100%",
+              "animations": {}
+            },
+            {
+              "type": "container",
+              "id": "loading-mask",
+              "style": {
+                "position": "absolute",
+                "top": "0",
+                "left": "0",
+                "right": "0",
+                "bottom": "0",
+                "zIndex": 999,
+                "display": "none",
+                "alignItems": "center",
+                "justifyContent": "center"
+              },
+              "body": [
+                {
+                  "type": "html",
+                  "html": "<div id='loadingdiv' name='loadingdiv'><i class='fa fa-spinner fa-spin'></i> 页面加载中，请稍候...</div>",
+                  "id": "u:665c71b65e2b"
+                }
+              ],
+              "themeCss": {
+                "baseControlClassName": {
+                  "background:default": "rgba(255,255,255,0.8)",
+                  "font:default": {
+                    "fontSize": "18px"
+                  }
+                }
+              }
+            }
+          ],
+          "themeCss": {
+            "baseControlClassName": {
+              "border:default": {
+                "border": "1px solid #eee"
+              }
+            }
+          },
+          "isFixedHeight": false,
+          "animations": {}
+        }
+      ]
+    }
+  ],
+  "regions": [
+    "body",
+    "header"
+  ],
+  "initApi": {
+    "method": "get",
+    "url": "dummy",
+    "adaptor": "const m = document.cookie.match(/(?:^|; )roadflow-token=([^;]+)/); const token = m ? decodeURIComponent(m[1]) : ''; window.addEventListener('message', function(e) { if (e.data === 'iframeLoaded') { document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'none'; } }); return { status: 0, data: { token } };"
+  },
+  "title": "饱和应收统计报表"
+}
