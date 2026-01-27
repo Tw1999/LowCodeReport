@@ -12,11 +12,10 @@
       "direction": "row",
       "alignItems": "stretch",
       "style": {
-        "height": "auto",
+        "height": "calc(100vh - 160px)",
         "gap": "16px",
         "flexWrap": "nowrap",
-        "position": "static",
-        "minHeight": "85vh"
+        "position": "static"
       },
       "items": [
         {
@@ -372,11 +371,13 @@
             {
               "type": "iframe",
               "id": "u:6f1ee8158eed",
+              "visibleOn": "!!data.comm_ids",
               "src": "/ureport/preview?_u=file:annual_summary_report.xml&commId=${comm_ids}&costIds=${corp_cost_ids}&feeDateStart=${feeDateStart}&feeDateEnd=${feeDateEnd}&dealDateStart=${dealDateStart}&dealDateEnd=${dealDateEnd}&chargeModes=${chargeModes}&customerId=${customerId}&hasRefund=${hasRefund}&ts=${ts}&token=${token}&_i=1&_r=1",
               "width": "100%",
               "animations": {},
-              "visibleOn": "!!data.comm_ids",
-              "height": "80vh"
+              "style": {
+                "height": "calc(100vh - 105px)"
+              }
             },
             {
               "type": "container",
@@ -413,9 +414,9 @@
             "display": "block",
             "position": "static",
             "flex": "1",
-            "height": "auto",
-            "overflow": "auto",
-            "minHeight": "85vh"
+            "style": {
+              "height": "calc(100vh - 105px)"
+            }
           },
           "isFixedHeight": false,
           "themeCss": {
