@@ -12,7 +12,7 @@
       "direction": "row",
       "alignItems": "stretch",
       "style": {
-        "height": "calc(100vh - 160px)",
+        "height": "calc(100vh - 105px)",
         "gap": "16px",
         "flexWrap": "nowrap",
         "position": "static"
@@ -28,7 +28,9 @@
             "width": "360px",
             "border": "none",
             "background": "linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%)",
-            "height": "100%"
+            "height": "100%",
+            "overflow-y": "auto",
+            "overflow-x": "hidden"
           },
           "labelAlign": "left",
           "body": [
