@@ -363,6 +363,14 @@
                   "id": "u:665c71b65e2b"
                 }
               ],
+              "themeCss": {
+                "baseControlClassName": {
+                  "background:default": "rgba(255,255,255,0.8)",
+                  "font:default": {
+                    "fontSize": "18px"
+                  }
+                }
+              },
               "style": {
                 "position": "absolute",
                 "top": "0",
