@@ -236,7 +236,6 @@
                                   "start_date": "${start_date}",
                                   "end_date": "${end_date}",
                                   "jzsj": "${jzsj}",
-                                  "page": 1,
                                   "ts": "${TIMESTAMP()}"
                                 }
                               }
@@ -256,8 +255,6 @@
                                 "start_date": "${start_date}",
                                 "end_date": "${end_date}",
                                 "jzsj": "${jzsj}",
-                                "page": "${page | default: 1}",
-                                "page_size": "${page_size | default: 20}",
                                 "ts": "${ts}"
                               }
                             }
@@ -289,229 +286,13 @@
           },
           "body": [
             {
-              "type": "flex",
-              "id": "u:pagination-container",
-              "visibleOn": "!!data.comm_id",
-              "style": {
-                "position": "static",
-                "backgroundColor": "#fafafa",
-                "gap": "12px",
-                "flexWrap": "nowrap",
-                "flexShrink": "0",
-                "flex": "0 0 auto"
-              },
-              "themeCss": {
-                "baseControlClassName": {
-                  "border:default": {
-                    "borderBottom": "1px solid #e8e8e8"
-                  },
-                  "padding-and-margin:default": {
-                    "padding": "10px 15px"
-                  }
-                }
-              },
-              "isFixedWidth": false,
-              "direction": "row",
-              "justify": "flex-start",
-              "alignItems": "center",
-              "items": [
-                {
-                  "type": "button",
-                  "label": "上一页",
-                  "level": "default",
-                  "size": "sm",
-                  "id": "u:prev-page-btn",
-                  "disabledOn": "${page <= 1}",
-                  "onEvent": {
-                    "click": {
-                      "actions": [
-                        {
-                          "actionType": "setValue",
-                          "componentId": "u:78013e50fdec",
-                          "args": {
-                            "value": {
-                              "page": "${page - 1}",
-                              "ts": "${TIMESTAMP()}"
-                            }
-                          }
-                        },
-                        {
-                          "actionType": "reload",
-                          "componentId": "u:6f1ee8158eed"
-                        },
-                        {
-                          "actionType": "custom",
-                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "type": "input-number",
-                  "name": "page",
-                  "id": "u:page-input",
-                  "value": 1,
-                  "min": 1,
-                  "size": "sm",
-                  "style": {
-                    "width": "80px",
-                    "marginBottom": "0"
-                  },
-                  "prefix": "第",
-                  "suffix": "页",
-                  "keyboard": true,
-                  "onEvent": {
-                    "change": {
-                      "actions": [
-                        {
-                          "actionType": "setValue",
-                          "componentId": "u:78013e50fdec",
-                          "args": {
-                            "value": {
-                              "ts": "${TIMESTAMP()}"
-                            }
-                          }
-                        },
-                        {
-                          "actionType": "reload",
-                          "componentId": "u:6f1ee8158eed"
-                        },
-                        {
-                          "actionType": "custom",
-                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "label": "下一页",
-                  "level": "default",
-                  "size": "sm",
-                  "id": "u:next-page-btn",
-                  "onEvent": {
-                    "click": {
-                      "actions": [
-                        {
-                          "actionType": "setValue",
-                          "componentId": "u:78013e50fdec",
-                          "args": {
-                            "value": {
-                              "page": "${page + 1}",
-                              "ts": "${TIMESTAMP()}"
-                            }
-                          }
-                        },
-                        {
-                          "actionType": "reload",
-                          "componentId": "u:6f1ee8158eed"
-                        },
-                        {
-                          "actionType": "custom",
-                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "type": "divider",
-                  "direction": "vertical",
-                  "style": {
-                    "height": "20px",
-                    "margin": "0 8px"
-                  },
-                  "id": "u:438327f32754"
-                },
-                {
-                  "type": "tpl",
-                  "tpl": "每页",
-                  "style": {},
-                  "themeCss": {
-                    "baseControlClassName": {
-                      "font:default": {
-                        "fontSize": "14px",
-                        "color": "#666"
-                      }
-                    }
-                  },
-                  "id": "u:693951df2636"
-                },
-                {
-                  "type": "select",
-                  "name": "page_size",
-                  "id": "u:pagesize-select",
-                  "value": 20,
-                  "options": [
-                    {
-                      "label": "10条",
-                      "value": 10
-                    },
-                    {
-                      "label": "20条",
-                      "value": 20
-                    },
-                    {
-                      "label": "50条",
-                      "value": 50
-                    },
-                    {
-                      "label": "100条",
-                      "value": 100
-                    }
-                  ],
-                  "size": "sm",
-                  "style": {
-                    "width": "90px",
-                    "marginBottom": "0"
-                  },
-                  "onEvent": {
-                    "change": {
-                      "actions": [
-                        {
-                          "actionType": "setValue",
-                          "componentId": "u:78013e50fdec",
-                          "args": {
-                            "value": {
-                              "page": 1,
-                              "ts": "${TIMESTAMP()}"
-                            }
-                          }
-                        },
-                        {
-                          "actionType": "reload",
-                          "componentId": "u:6f1ee8158eed"
-                        },
-                        {
-                          "actionType": "custom",
-                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "type": "divider",
-                  "direction": "vertical",
-                  "style": {
-                    "height": "20px",
-                    "margin": "0 8px"
-                  },
-                  "id": "u:efdff8dc0c08"
-                }
-              ],
-              "isFixedHeight": false
-            },
-            {
               "type": "iframe",
               "id": "u:6f1ee8158eed",
               "visibleOn": "!!data.comm_id",
-              "src": "/ureport/preview?_u=file:qianfei_huizong_chaxu.xml&comm_id=${comm_id}&cost_ids=${cost_ids}&start_date=${start_date}&end_date=${end_date}&jzsj=${jzsj}&page=${page | default: 1}&page_size=${page_size | default: 20}&ts=${ts}",
+              "src": "/ureport/preview?_u=file:qianfei_huizong_chaxu.xml&comm_id=${comm_id}&cost_ids=${cost_ids}&start_date=${start_date}&end_date=${end_date}&jzsj=${jzsj}&ts=${ts}",
               "width": "100%",
               "style": {
-                "height": "calc(100vh - 155px)"
+                "height": "calc(100vh - 105px)"
               },
               "animations": {},
               "onEvent": {
