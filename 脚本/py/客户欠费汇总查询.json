@@ -1,0 +1,599 @@
+{
+  "type": "page",
+  "id": "u:78013e50fdec",
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": false
+  },
+  "body": [
+    {
+      "type": "flex",
+      "id": "u:f6b3a1032d40",
+      "direction": "row",
+      "alignItems": "stretch",
+      "style": {
+        "height": "calc(100vh - 180px)",
+        "gap": "16px",
+        "flexWrap": "nowrap",
+        "position": "static"
+      },
+      "items": [
+        {
+          "type": "form",
+          "id": "u:0324f2443704",
+          "title": "",
+          "wrapWithPanel": true,
+          "mode": "vertical",
+          "style": {
+            "width": "360px",
+            "border": "none",
+            "background": "linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%)",
+            "height": "calc(100vh - 105px)",
+            "overflowY": "auto",
+            "paddingRight": "8px"
+          },
+          "labelAlign": "left",
+          "body": [
+            {
+              "type": "tpl",
+              "id": "u:55ac1b6dbe8d",
+              "tpl": "<div style=\"background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px 12px 0 0; margin: -16px -16px 20px -16px;\">\n<div style=\"display: flex; align-items: center; justify-content: space-between; color: white;\">\n<div style=\"display: flex; align-items: center; gap: 10px;\">\n<div>\n<div style=\"font-size: 16px; font-weight: bold;\">筛选条件</div>\n<div style=\"font-size: 12px; opacity: 0.9;\">支持多维度精确搜索（必填）</div>\n</div>\n</div>\n</div>\n</div>",
+              "inline": false
+            },
+            {
+              "type": "tree-select",
+              "label": "项目选择",
+              "name": "comm_id",
+              "id": "u:c6ba10d9a88d",
+              "clearable": false,
+              "nodeBehavior": [
+                "check"
+              ],
+              "showIcon": true,
+              "searchable": true,
+              "onlyLeaf": true,
+              "multiple": false,
+              "required": true,
+              "hideNodePathLabel": true,
+              "themeCss": {
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed"
+                }
+              },
+              "source": {
+                "method": "get",
+                "url": "/amis/designer/comm-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "placeholder": "请选择项目（必填）",
+              "className": "mb-2"
+            },
+            {
+              "type": "tree-select",
+              "label": "收费科目",
+              "name": "cost_ids",
+              "id": "u:ff9e0743f653",
+              "multiple": true,
+              "clearable": false,
+              "autoCheckChildren": true,
+              "nodeBehavior": [
+                "check",
+                "unfold"
+              ],
+              "showIcon": true,
+              "onlyChildren": true,
+              "joinValues": true,
+              "searchable": true,
+              "themeCss": {
+                "controlClassName": {
+                  "border-radius": "8px",
+                  "border": "1px solid #e0e6ed",
+                  "max-height": "120px",
+                  "overflow-y": "auto"
+                }
+              },
+              "hideNodePathLabel": true,
+              "source": {
+                "method": "get",
+                "url": "/amis/designer/cost-tree",
+                "adaptor": "return payload;",
+                "requestAdaptor": "let token = ''; document.cookie.split('; ').forEach(i => { if (i.startsWith('roadflow-token=')) token = i.split('=')[1]; }); api.headers = { ...api.headers, 'roadflow-token': token }; return api;"
+              },
+              "labelField": "name",
+              "valueField": "id",
+              "placeholder": "请选择费项（不选则查询所有）",
+              "maxTagCount": 3,
+              "overflowTagPopover": {
+                "placement": "bottom"
+              },
+              "lazyLoad": true,
+              "className": "mb-2"
+            },
+            {
+              "type": "input-datetime",
+              "label": "费用开始时间",
+              "id": "u:d346ccd0480c",
+              "name": "start_date",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
+              "placeholder": "请选择日期及时间",
+              "value": "${DATEMODIFY(NOW(), 'startOf', 'month')|date:YYYY-MM-01} 00:00:00",
+              "required": true,
+              "className": "mb-2"
+            },
+            {
+              "type": "input-datetime",
+              "label": "费用结束时间",
+              "name": "end_date",
+              "id": "u:2ec323d2ef5a",
+              "value": "${NOW()|date:YYYY-MM-DD} 23:59:59",
+              "placeholder": "请选择日期及时间",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "required": true,
+              "className": "mb-2"
+            },
+            {
+              "type": "input-datetime",
+              "id": "u:dc504e00240d",
+              "label": "截止时间",
+              "name": "jzsj",
+              "value": "${NOW()|date:YYYY-MM-DD} 23:59:59",
+              "placeholder": "请选择日期及时间",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
+              "required": true,
+              "className": "mb-2"
+            },
+            {
+              "type": "action",
+              "label": "",
+              "body": [
+                {
+                  "type": "button-group",
+                  "buttons": [
+                    {
+                      "type": "button",
+                      "label": "🔄 重置所有",
+                      "level": "light",
+                      "className": "mr-2",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "reset",
+                              "componentId": "u:0324f2443704"
+                            },
+                            {
+                              "actionType": "toast",
+                              "args": {
+                                "msgType": "success",
+                                "msg": "已重置所有筛选条件",
+                                "position": "top-center"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:151ec5ffc220"
+                    },
+                    {
+                      "type": "button",
+                      "label": "查询全部",
+                      "level": "primary",
+                      "icon": "fa fa-search",
+                      "onEvent": {
+                        "click": {
+                          "actions": [
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.comm_id",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择项目！",
+                                "position": "top-center"
+                              }
+                            },
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.start_date",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择费用开始时间！",
+                                "position": "top-center"
+                              }
+                            },
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.end_date",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择费用结束时间！",
+                                "position": "top-center"
+                              }
+                            },
+                            {
+                              "actionType": "toast",
+                              "expression": "!event.data.jzsj",
+                              "args": {
+                                "msgType": "error",
+                                "msg": "请选择截止时间！",
+                                "position": "top-center"
+                              }
+                            },
+                            {
+                              "actionType": "setValue",
+                              "expression": "!!event.data.comm_id && !!event.data.start_date && !!event.data.end_date && !!event.data.jzsj",
+                              "componentId": "u:78013e50fdec",
+                              "args": {
+                                "value": {
+                                  "comm_id": "${comm_id}",
+                                  "cost_ids": "${cost_ids}",
+                                  "start_date": "${start_date}",
+                                  "end_date": "${end_date}",
+                                  "jzsj": "${jzsj}",
+                                  "page": 1,
+                                  "ts": "${TIMESTAMP()}"
+                                }
+                              }
+                            },
+                            {
+                              "actionType": "custom",
+                              "expression": "!!event.data.comm_id && !!event.data.start_date && !!event.data.end_date && !!event.data.jzsj",
+                              "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                            },
+                            {
+                              "actionType": "reload",
+                              "expression": "!!event.data.comm_id && !!event.data.start_date && !!event.data.end_date && !!event.data.jzsj",
+                              "componentId": "u:6f1ee8158eed",
+                              "data": {
+                                "comm_id": "${comm_id}",
+                                "cost_ids": "${cost_ids}",
+                                "start_date": "${start_date}",
+                                "end_date": "${end_date}",
+                                "jzsj": "${jzsj}",
+                                "page": "${page | default: 1}",
+                                "page_size": "${page_size | default: 20}",
+                                "ts": "${ts}"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "id": "u:8c52ac26a265"
+                    }
+                  ],
+                  "id": "u:dde198fd0549"
+                }
+              ],
+              "id": "u:9b9cc9e66604"
+            }
+          ],
+          "feat": "Insert",
+          "dsType": "api",
+          "panelClassName": "shadow-md border-radius-lg"
+        },
+        {
+          "type": "container",
+          "id": "u:iframe-container",
+          "style": {
+            "flex": "1",
+            "overflow": "hidden",
+            "position": "static",
+            "display": "block",
+            "height": "calc(100vh - 105px)"
+          },
+          "body": [
+            {
+              "type": "flex",
+              "id": "u:pagination-container",
+              "visibleOn": "!!data.comm_id",
+              "style": {
+                "position": "static",
+                "backgroundColor": "#fafafa",
+                "gap": "12px",
+                "flexWrap": "nowrap",
+                "flexShrink": "0",
+                "flex": "0 0 auto"
+              },
+              "themeCss": {
+                "baseControlClassName": {
+                  "border:default": {
+                    "borderBottom": "1px solid #e8e8e8"
+                  },
+                  "padding-and-margin:default": {
+                    "padding": "10px 15px"
+                  }
+                }
+              },
+              "isFixedWidth": false,
+              "direction": "row",
+              "justify": "flex-start",
+              "alignItems": "center",
+              "items": [
+                {
+                  "type": "button",
+                  "label": "上一页",
+                  "level": "default",
+                  "size": "sm",
+                  "id": "u:prev-page-btn",
+                  "disabledOn": "${page <= 1}",
+                  "onEvent": {
+                    "click": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": "${page - 1}",
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "input-number",
+                  "name": "page",
+                  "id": "u:page-input",
+                  "value": 1,
+                  "min": 1,
+                  "size": "sm",
+                  "style": {
+                    "width": "80px",
+                    "marginBottom": "0"
+                  },
+                  "prefix": "第",
+                  "suffix": "页",
+                  "keyboard": true,
+                  "onEvent": {
+                    "change": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "button",
+                  "label": "下一页",
+                  "level": "default",
+                  "size": "sm",
+                  "id": "u:next-page-btn",
+                  "onEvent": {
+                    "click": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": "${page + 1}",
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "divider",
+                  "direction": "vertical",
+                  "style": {
+                    "height": "20px",
+                    "margin": "0 8px"
+                  },
+                  "id": "u:438327f32754"
+                },
+                {
+                  "type": "tpl",
+                  "tpl": "每页",
+                  "style": {},
+                  "themeCss": {
+                    "baseControlClassName": {
+                      "font:default": {
+                        "fontSize": "14px",
+                        "color": "#666"
+                      }
+                    }
+                  },
+                  "id": "u:693951df2636"
+                },
+                {
+                  "type": "select",
+                  "name": "page_size",
+                  "id": "u:pagesize-select",
+                  "value": 20,
+                  "options": [
+                    {
+                      "label": "10条",
+                      "value": 10
+                    },
+                    {
+                      "label": "20条",
+                      "value": 20
+                    },
+                    {
+                      "label": "50条",
+                      "value": 50
+                    },
+                    {
+                      "label": "100条",
+                      "value": 100
+                    }
+                  ],
+                  "size": "sm",
+                  "style": {
+                    "width": "90px",
+                    "marginBottom": "0"
+                  },
+                  "onEvent": {
+                    "change": {
+                      "actions": [
+                        {
+                          "actionType": "setValue",
+                          "componentId": "u:78013e50fdec",
+                          "args": {
+                            "value": {
+                              "page": 1,
+                              "ts": "${TIMESTAMP()}"
+                            }
+                          }
+                        },
+                        {
+                          "actionType": "reload",
+                          "componentId": "u:6f1ee8158eed"
+                        },
+                        {
+                          "actionType": "custom",
+                          "script": "document.querySelector('[data-id=\\\"loading-mask\\\"]').style.display = 'flex';"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "divider",
+                  "direction": "vertical",
+                  "style": {
+                    "height": "20px",
+                    "margin": "0 8px"
+                  },
+                  "id": "u:efdff8dc0c08"
+                }
+              ],
+              "isFixedHeight": false
+            },
+            {
+              "type": "iframe",
+              "id": "u:6f1ee8158eed",
+              "visibleOn": "!!data.comm_id",
+              "src": "/ureport/preview?_u=file:qianfei_huizong_chaxu.xml&comm_id=${comm_id}&cost_ids=${cost_ids}&start_date=${start_date}&end_date=${end_date}&jzsj=${jzsj}&page=${page | default: 1}&page_size=${page_size | default: 20}&ts=${ts}",
+              "width": "100%",
+              "style": {
+                "height": "calc(100vh - 155px)"
+              },
+              "animations": {},
+              "onEvent": {
+                "load": {
+                  "actions": [
+                    {
+                      "actionType": "custom",
+                      "script": "document.querySelector('[data-id=\"loading-mask\"]').style.display = 'none';"
+                    }
+                  ]
+                },
+                "error": {
+                  "actions": [
+                    {
+                      "actionType": "custom",
+                      "script": "document.querySelector('[data-id=\"loading-mask\"]').style.display = 'none';"
+                    },
+                    {
+                      "actionType": "toast",
+                      "args": {
+                        "msgType": "error",
+                        "msg": "报表加载失败，请重试"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "container",
+              "id": "loading-mask",
+              "body": [
+                {
+                  "type": "html",
+                  "html": "<div id='loadingdiv' name='loadingdiv'><i class='fa fa-spinner fa-spin'></i> 页面加载中，请稍候...</div>",
+                  "id": "u:665c71b65e2b"
+                }
+              ],
+              "style": {
+                "position": "absolute",
+                "top": "0",
+                "left": "0",
+                "right": "0",
+                "bottom": "0",
+                "zIndex": 999,
+                "display": "none",
+                "alignItems": "center",
+                "justifyContent": "center"
+              },
+              "themeCss": {
+                "baseControlClassName": {
+                  "background:default": "rgba(255,255,255,0.8)",
+                  "font:default": {
+                    "fontSize": "18px"
+                  }
+                }
+              }
+            }
+          ],
+          "themeCss": {
+            "baseControlClassName": {
+              "border:default": {
+                "border": "1px solid #eee"
+              }
+            }
+          },
+          "isFixedHeight": false,
+          "animations": {}
+        }
+      ],
+      "isFixedHeight": false,
+      "isFixedWidth": false
+    }
+  ],
+  "title": "客户欠费汇总查询（按费用开始结束时间）",
+  "regions": [
+    "body",
+    "header"
+  ],
+  "initApi": {
+    "method": "get",
+    "url": "dummy",
+    "adaptor": "const m = document.cookie.match(/(?:^|; )roadflow-token=([^;]+)/); const token = m ? decodeURIComponent(m[1]) : ''; window.addEventListener('message', function(e) { if (e.data === 'iframeLoaded') { document.querySelector('[data-id=\"loading-mask\"]').style.display = 'none'; } }); return { status: 0, data: { token } };"
+  }
+}

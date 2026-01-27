@@ -82,7 +82,7 @@ cost_names = [row['cost_name'] for row in cost_rows if row.get('cost_name')]
 
 # === 如果没有数据，返回空 ===
 if not cost_names:
-    set_result(rows=[], message="暂无数据")
+    set_result(rows=[], message="暂无数据", total_count=0)
 else:
     # === 第二步：动态生成科目列的 CASE WHEN ===
     case_columns = []
@@ -221,6 +221,21 @@ else:
         f.comm_id,
         f.customer_id,
         f.resource_id
+    '''
+
+    # === 先执行COUNT查询获取总条数(在添加分页参数前) ===
+    # 由于主查询有GROUP BY，需要用子查询包装来统计分组后的记录数
+    count_sql = f"SELECT COUNT(*) as total_count FROM ({sql}) as count_table"
+
+    try:
+        count_result = db_query(count_sql, tuple(args))
+        total_count = count_result[0]['total_count'] if count_result else 0
+    except Exception as e:
+        print(f"COUNT查询失败: {str(e)}")
+        total_count = 0
+
+    # === 添加ORDER BY和分页(必须在COUNT查询之后) ===
+    sql += '''
     ORDER BY
         res.resource_code,
         customer.name
@@ -232,4 +247,4 @@ else:
 
     dataRows = db_query(sql, tuple(args))
     print("Final Args:\n", args)
-    set_result(rows=dataRows, message=sql)
+    set_result(rows=dataRows, message=f"查询成功，共{total_count}条数据，当前第{page}页", total_count=total_count)
