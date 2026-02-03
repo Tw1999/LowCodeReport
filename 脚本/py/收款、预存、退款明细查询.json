@@ -1,6 +1,10 @@
 {
   "type": "page",
   "id": "u:78013e50fdec",
+  "asideResizor": false,
+  "pullRefresh": {
+    "disabled": false
+  },
   "body": [
     {
       "type": "flex",
@@ -38,11 +42,12 @@
             },
             {
               "type": "tree-select",
-              "label": "项目选择",
-              "name": "comm_ids",
               "id": "u:c4633a8ac53a",
               "mode": "normal",
               "labelAlign": "top",
+              "className": "mb-2",
+              "label": "项目选择",
+              "name": "comm_ids",
               "multiple": true,
               "clearable": false,
               "autoCheckChildren": true,
@@ -77,7 +82,6 @@
               },
               "hidden": false,
               "value": "",
-              "className": "mb-2",
               "placeholder": "请选择项目（必填）",
               "maxTagCount": 3,
               "overflowTagPopover": {
@@ -89,7 +93,9 @@
             {
               "type": "tree-select",
               "label": "筛选费项",
+              "id": "u:077032606741",
               "name": "corp_cost_ids",
+              "placeholder": "请选择费项",
               "multiple": true,
               "clearable": false,
               "autoCheckChildren": true,
@@ -103,7 +109,6 @@
               "searchable": true,
               "onlyLeaf": false,
               "hidden": false,
-              "id": "u:077032606741",
               "value": "",
               "themeCss": {
                 "actionControlClassName": {
@@ -127,7 +132,6 @@
               },
               "labelField": "name",
               "valueField": "id",
-              "placeholder": "请选择费项",
               "maxTagCount": 3,
               "overflowTagPopover": {
                 "placement": "bottom"
@@ -135,22 +139,26 @@
               "lazyLoad": true
             },
             {
-              "type": "input-date",
-              "id": "u:5fc1f12546d2",
+              "type": "input-datetime",
               "label": "收款开始时间\n*",
               "name": "charge_start_date",
-              "valueFormat": "YYYY-MM-DD",
+              "id": "u:5fc1f12546d2",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
               "placeholder": "请选择日期，必填",
-              "required": true
+              "required": true,
+              "value": "${DATEMODIFY(NOW(), 'startOf', 'month')|date:YYYY-MM-01} 00:00:00",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss"
             },
             {
-              "type": "input-date",
+              "type": "input-datetime",
               "label": "收款结束时间\n*",
               "name": "charge_end_date",
               "id": "u:793d1cd857d0",
-              "valueFormat": "YYYY-MM-DD",
+              "valueFormat": "YYYY-MM-DD HH:mm:ss",
               "placeholder": "请选择日期，必填",
-              "required": true
+              "required": true,
+              "value": "${NOW()|date:YYYY-MM-DD} 23:59:59",
+              "displayFormat": "YYYY-MM-DD HH:mm:ss"
             },
             {
               "type": "input-date",
@@ -162,15 +170,14 @@
             {
               "type": "input-date",
               "label": "费用结束时间",
-              "id": "u:afb96fa5f641",
               "name": "end_date",
+              "id": "u:afb96fa5f641",
               "valueFormat": "YYYY-MM-DD"
             },
             {
               "type": "select",
               "label": "交付状态",
               "name": "pay_state",
-              "id": "u:01f803976e44",
               "options": [
                 {
                   "label": "自持",
@@ -209,12 +216,12 @@
                   "value": "9"
                 }
               ],
+              "id": "u:01f803976e44",
               "multiple": false
             },
             {
               "type": "select",
               "label": "查询范围",
-              "id": "u:25a413e01c94",
               "name": "query_range",
               "options": [
                 {
@@ -234,13 +241,14 @@
                   "value": "4"
                 }
               ],
+              "id": "u:25a413e01c94",
               "multiple": false
             },
             {
               "type": "select",
               "label": "收退款方式",
-              "name": "charge_mode",
               "id": "u:252b4fe56b72",
+              "name": "charge_mode",
               "multiple": false,
               "source": "/amis/designer/dictionary/tree?code=charge_mode",
               "labelField": "name",
@@ -327,7 +335,9 @@
                               "actionType": "toast",
                               "expression": "!event.data.comm_ids",
                               "args": {
-                                "msg": "请选择项目!"
+                                "msg": "请选择项目!",
+                                "msgType": "error",
+                                "position": "top-center"
                               },
                               "break": true
                             },
@@ -335,21 +345,35 @@
                               "actionType": "toast",
                               "expression": "!event.data.charge_start_date",
                               "args": {
-                                "msg": "请选择收款开始时间!"
+                                "msg": "请选择收款开始时间!",
+                                "msgType": "error",
+                                "position": "top-center"
                               },
                               "break": true
                             },
                             {
                               "actionType": "toast",
-                              "expression": "!event.data.charge_start_date",
+                              "expression": "!event.data.charge_end_date",
                               "args": {
-                                "msg": "请选择收款结束时间!"
+                                "msg": "请选择收款结束时间!",
+                                "msgType": "error",
+                                "position": "top-center"
+                              },
+                              "break": true
+                            },
+                            {
+                              "actionType": "toast",
+                              "expression": "(new Date(event.data.charge_start_date).getFullYear()) !== (new Date(event.data.charge_end_date).getFullYear())",
+                              "args": {
+                                "msg": "收款开始时间与结束时间不能跨年，请选择同一年份的日期！",
+                                "msgType": "error",
+                                "position": "top-center"
                               },
                               "break": true
                             },
                             {
                               "actionType": "setValue",
-                              "expression": "!!event.data.comm_ids",
+                              "expression": "!!event.data.comm_ids && !!event.data.charge_start_date && !!event.data.charge_end_date && (new Date(event.data.charge_start_date).getFullYear()) === (new Date(event.data.charge_end_date).getFullYear())",
                               "args": {
                                 "value": {
                                   "comm_ids": "${comm_ids|default:[]}",
@@ -373,12 +397,12 @@
                             },
                             {
                               "actionType": "custom",
-                              "expression": "!!event.data.comm_ids && !!event.data.charge_start_date && !!event.data.charge_end_date",
+                              "expression": "!!event.data.comm_ids && !!event.data.charge_start_date && !!event.data.charge_end_date && (new Date(event.data.charge_start_date).getFullYear()) === (new Date(event.data.charge_end_date).getFullYear())",
                               "script": "document.querySelector('[data-id=\"loading-mask\"]').style.display = 'flex';"
                             },
                             {
                               "actionType": "reload",
-                              "expression": "!!event.data.comm_ids && !!event.data.charge_start_date && !!event.data.charge_end_date",
+                              "expression": "!!event.data.comm_ids && !!event.data.charge_start_date && !!event.data.charge_end_date && (new Date(event.data.charge_start_date).getFullYear()) === (new Date(event.data.charge_end_date).getFullYear())",
                               "componentId": "u:6f1ee8158eed",
                               "data": {
                                 "comm_ids": "${comm_ids}",
@@ -422,6 +446,13 @@
         {
           "type": "container",
           "id": "u:iframe-container",
+          "style": {
+            "flex": "1",
+            "overflow": "hidden",
+            "display": "block",
+            "position": "static",
+            "height": "calc(100vh - 105px)"
+          },
           "body": [
             {
               "type": "html",
@@ -433,8 +464,8 @@
               "type": "container",
               "id": "loading-mask",
               "style": {
-                "display": "none",
                 "position": "absolute",
+                "display": "none",
                 "top": "0",
                 "left": "0",
                 "right": "0",
@@ -443,13 +474,6 @@
                 "alignItems": "center",
                 "justifyContent": "center"
               },
-              "body": [
-                {
-                  "type": "html",
-                  "html": "<div id='loadingdiv' name='loadingdiv'><i class='fa fa-spinner fa-spin'></i> 页面加载中，请稍候...</div>",
-                  "id": "u:665c71b65e2b"
-                }
-              ],
               "themeCss": {
                 "baseControlClassName": {
                   "background:default": "rgba(255,255,255,0.8)",
@@ -457,7 +481,14 @@
                     "fontSize": "18px"
                   }
                 }
-              }
+              },
+              "body": [
+                {
+                  "type": "html",
+                  "html": "<div id='loadingdiv' name='loadingdiv'><i class='fa fa-spinner fa-spin'></i> 页面加载中，请稍候...</div>",
+                  "id": "u:665c71b65e2b"
+                }
+              ]
             },
             {
               "type": "iframe",
@@ -466,11 +497,11 @@
                 "display": "block",
                 "flex": "0 0 auto",
                 "minWidth": "0",
-                "height": "calc(100vh - 160px)",
+                "height": "calc(100vh - 105px)",
                 "width": "100%",
                 "overflow": "auto"
               },
-              "src": "/ureport/preview?_u=file:fee_report_charge_receipts.xml&comm_ids=${comm_ids}&corp_cost_ids=${corp_cost_ids|default:[]}&token=${token|default:''}&ts=${ts|default:TIMESTAMP()}&charge_start_date=${charge_start_date|default:''}&charge_end_date=${charge_end_date|default:''}&start_date=${start_date|default:''}&end_date=${end_date|default:''}&pay_state=${pay_state|default:''}&page=${page | default: 1}&page_size=${page_size | default: 20}&columns=${selectedColumns}&query_range=${query_range}&charge_mode=${charge_mode}&deal_user=${deal_user}&bank_name=${bank_name}&bill_sign_start=${bill_sign_start}&bill_sign_end=${bill_sign_end}&change_bill_sign_start=${change_bill_sign_start}&change_bill_sign_end=${change_bill_sign_end}",
+              "src": "/ureport/preview?_u=file:fee_report_charge_receipts.xml&comm_ids=${comm_ids}&corp_cost_ids=${corp_cost_ids|default:[]}&token=${token|default:''}&ts=${ts|default:TIMESTAMP()}&charge_start_date=${charge_start_date|default:''}&charge_end_date=${charge_end_date|default:''}&start_date=${start_date|default:''}&end_date=${end_date|default:''}&pay_state=${pay_state|default:''}&columns=${selectedColumns}&query_range=${query_range}&charge_mode=${charge_mode}&deal_user=${deal_user}&bank_name=${bank_name}&bill_sign_start=${bill_sign_start}&bill_sign_end=${bill_sign_end}&change_bill_sign_start=${change_bill_sign_start}&change_bill_sign_end=${change_bill_sign_end}",
               "animations": {},
               "visibleOn": "!!data.comm_ids && !!data.charge_start_date && !!data.charge_end_date",
               "onEvent": {
@@ -500,13 +531,6 @@
               }
             }
           ],
-          "style": {
-            "display": "block",
-            "position": "static",
-            "flex": "1",
-            "overflow": "auto",
-            "height": "calc(100vh - 105px)"
-          },
           "isFixedHeight": false,
           "themeCss": {
             "baseControlClassName": {
@@ -523,10 +547,6 @@
     }
   ],
   "title": "收款、预存、退款明细查询",
-  "asideResizor": false,
-  "pullRefresh": {
-    "disabled": false
-  },
   "regions": [
     "body",
     "header"
